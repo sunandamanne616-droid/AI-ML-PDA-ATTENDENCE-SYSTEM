@@ -104,12 +104,7 @@ sunandamanne616-droid
 
 License
 
-This project is developed for academic and research purposes.<img width="1124" height="793" alt="Screenshot 2026-05-24 at 1 17 26 PM" src="https://github.com/user-attachments/assets/d1f77c4d-3ddd-45ff-b333-f579dce2db5e" />
-
-<img width="884" height="803" alt="Screenshot 2026-05-24 at 1 17 42 PM" src="https://github.com/user-attachments/assets/0a9aca65-1179-440f-96a0-194333fcbcbd" />
-<img width="516" height="798" alt="Screenshot 2026-05-24 at 1 17 31 PM" src="https://github.com/user-attachments/assets/e1f0cfb9-fb50-482a-b205-5fb1f989d489" />
-<img width="1124" height="793" alt="Screenshot 2026-05-24 at 1 17 26 PM" src="https://github.com/user-attachments/assets/93d62065-c066-4726-b27d-279d81fae3f3" />
-<img width="637" height="786" alt="Screenshot 2026-05-24 at 1 17 16 PM" src="https://github.com/user-attachments/assets/a5ea21bf-63ac-4483-9341-b0a160fca115" />
-<img width="595" height="558" alt="Screenshot 2026-05-24 at 1 01 13 PM" src="https://github.com/user-attachments/assets/3e9845b0-4810-4a9f-965c-4f9ef15f5544" />
+This project is developed for academic and research purposes.
+<img width="1124" height="793" alt="Screenshot 2026-05-24 at 1 17 26 PM" src="https://github.com/user-attachments/assets/ddb2b80d-8c3c-4f90-a765-19cc64981d74" />
 
 
