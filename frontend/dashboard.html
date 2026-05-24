@@ -1,0 +1,2567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIML Attendance System</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-deep:#0c0e14;
+  --bg-primary:#111319;
+  --bg-card:#181a23;
+  --bg-card-hover:#1e2130;
+  --bg-elevated:#222536;
+  --border:#262a3a;
+  --border-light:#2f3449;
+  --text-primary:#eef0f6;
+  --text-secondary:#8b90a5;
+  --text-muted:#5c6178;
+  --accent:#06d6a0;
+  --accent-dim:#06d6a020;
+  --accent-glow:#06d6a040;
+  --blue:#4ea8de;
+  --blue-dim:#4ea8de18;
+  --red:#ff6b6b;
+  --red-dim:#ff6b6b18;
+  --yellow:#ffd166;
+  --yellow-dim:#ffd16618;
+  --purple:#b388ff;
+  --purple-dim:#b388ff18;
+  --font-display:'Plus Jakarta Sans',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+  --radius:12px;
+  --radius-sm:8px;
+  --radius-lg:16px;
+  --shadow:0 4px 24px rgba(0,0,0,.3);
+  --shadow-lg:0 12px 48px rgba(0,0,0,.4);
+  --transition:all .25s cubic-bezier(.4,0,.2,1);
+}
+body{font-family:var(--font-body);background:var(--bg-deep);color:var(--text-primary);min-height:100vh;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+
+/* ═══ LOGIN ═══ */
+.login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;position:relative;overflow:hidden;
+  background:radial-gradient(ellipse 80% 60% at 20% 80%,#06d6a012 0%,transparent 60%),
+  radial-gradient(ellipse 60% 50% at 80% 20%,#4ea8de10 0%,transparent 60%),var(--bg-deep)}
+.login-page::before{content:'';position:absolute;inset:0;opacity:.025;
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px}
+.login-orb{position:absolute;border-radius:50%;filter:blur(80px);animation:orbFloat 12s ease-in-out infinite}
+.login-orb:nth-child(1){width:400px;height:400px;background:#06d6a008;top:-100px;left:-100px}
+.login-orb:nth-child(2){width:300px;height:300px;background:#4ea8de08;bottom:-80px;right:-80px;animation-delay:-4s}
+.login-orb:nth-child(3){width:200px;height:200px;background:#b388ff06;top:40%;left:60%;animation-delay:-8s}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-20px) scale(1.05)}66%{transform:translate(-20px,30px) scale(.95)}}
+.login-box{position:relative;z-index:1;width:400px;background:rgba(24,26,35,.7);backdrop-filter:blur(40px);border:1px solid var(--border);border-radius:var(--radius-lg);padding:48px 40px;box-shadow:var(--shadow-lg);animation:fadeUp .5s cubic-bezier(.4,0,.2,1)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.login-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px}
+.login-logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--blue));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px #06d6a030}
+.login-box h1{font-family:var(--font-display);font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.login-box p.login-sub{text-align:center;color:var(--text-muted);font-size:13px;margin-bottom:28px}
+.login-label{display:block;font-size:11px;color:var(--text-secondary);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.login-box input{width:100%;padding:11px 14px;margin-bottom:14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-deep);color:var(--text-primary);font-size:14px;font-family:var(--font-body);outline:none;transition:var(--transition)}
+.login-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.login-box input::placeholder{color:var(--text-muted)}
+.login-box button{width:100%;padding:12px;border:none;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--accent),#0bb88a);color:var(--bg-deep);font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer;transition:var(--transition);letter-spacing:.3px}
+.login-box button:hover{transform:translateY(-1px);box-shadow:0 6px 24px #06d6a030}
+.login-error{color:var(--red);text-align:center;margin-top:8px;font-size:12px}
+
+/* ═══ LAYOUT ═══ */
+.app{display:none;height:100vh;overflow:hidden}
+.sidebar{width:240px;background:var(--bg-primary);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:fixed;z-index:100}
+.sidebar-header{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.sidebar-brand-row{display:flex;align-items:center;gap:10px}
+.sidebar-brand-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--blue));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:0 0 24px #06d6a018}
+.sidebar-header h2{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-primary)}
+.sidebar-header small{display:block;font-size:10px;color:var(--text-muted);margin-top:2px}
+.sidebar-menu{flex:1;overflow-y:auto;padding:10px}
+.sidebar-section{font-family:var(--font-display);font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;padding:16px 12px 6px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-secondary);font-size:13px;font-weight:500;transition:var(--transition);position:relative;margin:1px 0}
+.sidebar-item:hover{background:var(--bg-card);color:var(--text-primary)}
+.sidebar-item.active{background:var(--accent-dim);color:var(--accent)}
+.sidebar-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--accent);border-radius:0 3px 3px 0}
+.sidebar-item .icon{font-size:15px;width:20px;text-align:center}
+.sidebar-bottom{padding:16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sidebar-avatar{width:34px;height:34px;border-radius:8px;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--accent);flex-shrink:0}
+.sidebar-userinfo{flex:1;min-width:0}
+.sidebar-username{font-size:12px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-userrole{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+.sidebar-bottom .logout-btn{padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:var(--transition);font-family:var(--font-body);white-space:nowrap}
+.sidebar-bottom .logout-btn:hover{border-color:var(--red);color:var(--red)}
+.main{margin-left:240px;padding:28px 32px;height:100vh;overflow-y:auto}
+
+/* ═══ STAT CARDS ═══ */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:var(--transition);position:relative;overflow:hidden}
+.stat-card:hover{border-color:var(--border-light);transform:translateY(-2px);box-shadow:var(--shadow)}
+.stat-card::after{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;opacity:.08}
+.stat-card.c-teal::after{background:var(--accent)}.stat-card.c-blue::after{background:var(--blue)}.stat-card.c-red::after{background:var(--red)}.stat-card.c-yellow::after{background:var(--yellow)}
+.stat-card .label{color:var(--text-muted);font-size:11px;font-weight:500;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.stat-card .value{font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--blue)}
+.stat-card .value.green{color:var(--accent)}.stat-card .value.red{color:var(--red)}.stat-card .value.yellow{color:var(--yellow)}
+
+/* ═══ PAGES ═══ */
+.page{display:none}.page.active{display:block}
+.page h2{font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:16px;color:var(--text-primary);letter-spacing:-.02em}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px;transition:var(--transition)}
+.card:hover{border-color:var(--border-light)}
+.card h3{margin-bottom:12px;color:var(--text-primary);font-family:var(--font-display);font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card-icon{width:28px;height:28px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.card-icon.teal{background:var(--accent-dim);color:var(--accent)}
+.card-icon.blue{background:var(--blue-dim);color:var(--blue)}
+.card-icon.red{background:var(--red-dim);color:var(--red)}
+.card-icon.yellow{background:var(--yellow-dim);color:var(--yellow)}
+
+/* ═══ FORMS ═══ */
+.form-row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.form-group{flex:1;min-width:150px}
+.form-group label{display:block;color:var(--text-muted);font-size:11px;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group select{width:100%;padding:9px 13px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-deep);color:var(--text-primary);font-size:13px;font-family:var(--font-body);outline:none;transition:var(--transition)}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+
+/* ═══ BUTTONS ═══ */
+.btn{padding:8px 18px;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;font-weight:600;transition:var(--transition);font-family:var(--font-body);display:inline-flex;align-items:center;gap:5px}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--accent-dim);color:var(--accent);border:1px solid transparent}.btn-primary:hover{border-color:var(--accent)}
+.btn-success{background:var(--accent);color:var(--bg-deep)}.btn-success:hover{box-shadow:0 4px 16px var(--accent-glow)}
+.btn-danger{background:var(--red-dim);color:var(--red);border:1px solid transparent}.btn-danger:hover{border-color:var(--red)}
+.btn-warning{background:var(--yellow-dim);color:var(--yellow);border:1px solid transparent}.btn-warning:hover{border-color:var(--yellow)}
+.btn-secondary{background:var(--purple-dim);color:var(--purple);border:1px solid transparent}.btn-secondary:hover{border-color:var(--purple)}
+.btn-sm{padding:5px 12px;font-size:11px}
+
+/* ═══ TABLES ═══ */
+table{width:100%;border-collapse:separate;border-spacing:0;margin-top:12px}
+th{background:var(--bg-elevated);color:var(--text-muted);padding:10px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:600;border-bottom:1px solid var(--border)}
+th:first-child{border-radius:var(--radius-sm) 0 0 0}th:last-child{border-radius:0 var(--radius-sm) 0 0}
+td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-secondary);transition:var(--transition)}
+tr:hover td{background:var(--bg-card-hover);color:var(--text-primary)}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600}
+.badge-p{background:var(--accent-dim);color:var(--accent)}.badge-a{background:var(--red-dim);color:var(--red)}
+.badge-warn{background:var(--yellow-dim);color:var(--yellow)}
+
+/* ═══ CAMERA ═══ */
+.camera-container{position:relative;background:#000;border-radius:var(--radius);overflow:hidden;max-width:640px;margin:12px 0;border:1px solid var(--border)}
+.camera-container video,.camera-container img,.camera-container canvas{width:100%;display:block;border-radius:var(--radius)}
+.camera-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.camera-status{position:absolute;top:10px;right:10px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:5px}
+.camera-status.live{background:var(--accent);color:var(--bg-deep)}.camera-status.off{background:var(--red);color:#fff}
+.camera-status.live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--bg-deep);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.no-camera{display:flex;align-items:center;justify-content:center;height:300px;background:var(--bg-card);border-radius:var(--radius);color:var(--text-muted);font-size:14px}
+
+/* ═══ PROGRESS ═══ */
+.progress-bar{height:6px;background:var(--border);border-radius:4px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .5s}
+
+/* ═══ TOAST ═══ */
+.toast{position:fixed;top:20px;right:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 20px;z-index:9999;animation:slideIn .3s;max-width:350px;font-size:13px;box-shadow:var(--shadow)}
+.toast.success{border-color:var(--accent);color:var(--accent)}.toast.error{border-color:var(--red);color:var(--red)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ═══ ALERTS ═══ */
+.alert-box{padding:12px 16px;border-radius:var(--radius-sm);margin-bottom:12px;font-size:13px}
+.alert-red{background:var(--red-dim);border:1px solid #ff6b6b40;color:var(--red)}
+.alert-green{background:var(--accent-dim);border:1px solid #06d6a040;color:var(--accent)}
+.alert-yellow{background:var(--yellow-dim);border:1px solid #ffd16640;color:var(--yellow)}
+
+/* ═══ MODAL ═══ */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:10000;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal-box{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;max-width:700px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-box h2{color:var(--accent);margin-bottom:6px;font-family:var(--font-display);font-size:18px;font-weight:700}
+.modal-box .subtitle{color:var(--text-secondary);font-size:12px;margin-bottom:16px}
+.capture-video-wrap{position:relative;background:#000;border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.capture-video-wrap video{width:100%;display:block;border-radius:var(--radius)}
+.capture-video-wrap canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.capture-stats{display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap}
+.capture-stats .cs{background:var(--bg-deep);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;text-align:center;flex:1;min-width:100px}
+.capture-stats .cs .num{font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--blue)}
+.capture-stats .cs .lbl{font-size:10px;color:var(--text-muted)}
+.capture-msg{padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:10px;text-align:center;font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- ══════ LOGIN ══════ -->
+<div class="login-page" id="loginPage">
+  <div class="login-orb"></div><div class="login-orb"></div><div class="login-orb"></div>
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">🎓</div>
+      <h1>AIML Attendance</h1>
+    </div>
+    <p class="login-sub">AI-Powered Face Recognition System</p>
+    <label class="login-label">Username</label>
+    <input type="text" id="loginUser" placeholder="Enter your username">
+    <label class="login-label">Password</label>
+    <input type="password" id="loginPass" placeholder="Enter your password">
+    <button onclick="doLogin()">Sign In →</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ══════ APP ══════ -->
+<div class="app" id="appContainer">
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-brand-row">
+      <div class="sidebar-brand-icon">🎓</div>
+      <div><h2>AIML Attend</h2><small id="userInfo"></small></div>
+    </div>
+  </div>
+  <div class="sidebar-menu" id="sidebarMenu"></div>
+  <div class="sidebar-bottom">
+    <div class="sidebar-avatar" id="sidebarAvatar">U</div>
+    <div class="sidebar-userinfo">
+      <div class="sidebar-username" id="sidebarUsername">User</div>
+      <div class="sidebar-userrole" id="sidebarRole">Role</div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+<div class="main" id="mainContent"></div>
+</div>
+
+<!-- Face Capture Modal -->
+<div class="modal-overlay" id="faceCaptureModal">
+  <div class="modal-box">
+    <h2 id="capModalTitle">📸 Capture Face — <span id="capRollLabel"></span></h2>
+    <p class="subtitle" id="capNameLabel"></p>
+    <div class="capture-msg alert-yellow" id="capMsg">Position student's face in the camera and press Start</div>
+    <div class="capture-video-wrap">
+      <video id="capVideo" autoplay muted playsinline></video>
+      <canvas id="capCanvas"></canvas>
+    </div>
+    <div class="capture-stats">
+      <div class="cs"><div class="num" id="capCaptured">0</div><div class="lbl">Captured</div></div>
+      <div class="cs"><div class="num" id="capTarget">60</div><div class="lbl">Target</div></div>
+      <div class="cs"><div class="num" id="capSkipped">0</div><div class="lbl">Skipped</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="capProgress" style="width:0%"></div></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-success" id="capStartBtn" onclick="startFaceCapture()">▶ Start Capture</button>
+      <button class="btn btn-danger" id="capStopBtn" onclick="stopFaceCapture()" style="display:none">⏹ Stop</button>
+      <button class="btn btn-warning" id="capSkipBtn" onclick="closeFaceCaptureModal()">✖ Skip / Close</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+const API = '';
+let TOKEN = '', ROLE = '', USERNAME = '';
+
+async function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value;
+  const err=document.getElementById('loginError');
+  err.textContent='';
+  try{
+    const r=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:`username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.detail||'Login failed');
+    TOKEN=d.access_token;ROLE=d.role;USERNAME=d.username||u;
+    localStorage.setItem('token',TOKEN);localStorage.setItem('role',ROLE);localStorage.setItem('username',USERNAME);
+    showApp();
+  }catch(e){err.textContent=e.message}
+}
+function doLogout(){TOKEN='';ROLE='';USERNAME='';localStorage.clear();location.reload()}
+function authHeaders(){return{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'}}
+
+window.onload=()=>{
+  TOKEN=localStorage.getItem('token')||'';ROLE=localStorage.getItem('role')||'';USERNAME=localStorage.getItem('username')||'';
+  if(TOKEN)showApp();
+};
+
+function showApp(){
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('appContainer').style.display='flex';
+  document.getElementById('userInfo').textContent=`${USERNAME} (${ROLE})`;
+  document.getElementById('sidebarUsername').textContent=USERNAME;
+  document.getElementById('sidebarRole').textContent=ROLE;
+  document.getElementById('sidebarAvatar').textContent=USERNAME.substring(0,2).toUpperCase();
+  buildSidebar();buildPages();
+  document.querySelector('.sidebar-item')?.click();
+}
+
+function toast(msg,type='success'){
+  const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),3000);
+}
+
+async function api(url,opts={}){
+  const r=await fetch(API+url,{...opts,headers:{...authHeaders(),...(opts.headers||{})}});
+  if(r.status===401){doLogout();return null}
+  return r;
+}
+function buildSidebar(){
+  const m=document.getElementById('sidebarMenu');
+  let items=[];
+  if(ROLE==='faculty'){
+    items=[
+      {s:'Overview'},{icon:'📊',label:'Dashboard',page:'faculty-dash'},
+      {s:'Manage'},{icon:'👥',label:'Students',page:'faculty-students'},
+      {icon:'📅',label:'Timetable',page:'faculty-timetable'},
+      {s:'Attendance'},{icon:'🤖',label:'Start Attendance',page:'faculty-attendance'},
+      {icon:'📋',label:'Register',page:'faculty-register'},
+      {icon:'📈',label:'Reports & Averages',page:'faculty-reports'},
+      {s:'Academic Planner'},{icon:'🗓️',label:'Semester Calendar',page:'faculty-calendar'},
+      {icon:'📚',label:'Syllabus',page:'faculty-syllabus'},
+      {icon:'📝',label:'Lesson Plan',page:'faculty-lessonplan'},
+      {s:'AI'},{icon:'🧠',label:'Face Recognition',page:'faculty-face'},
+    ];
+  }else if(ROLE==='student'){
+    items=[
+      {s:'My Attendance'},{icon:'📊',label:'Overview',page:'student-dash'},
+      {icon:'📚',label:'Subject Wise',page:'student-subjects'},
+      {icon:'📋',label:'Day by Day Records',page:'student-records'},
+      {s:'Academic'},{icon:'📚',label:'Syllabus',page:'faculty-syllabus'},
+      {icon:'📝',label:'Lesson Plan',page:'faculty-lessonplan'},
+    ];
+  }else if(ROLE==='hod'||ROLE==='principal'){
+    if(ROLE==='principal'){
+      items=[
+        {s:'Overview'},{icon:'📊',label:'Dashboard',page:'hod-dash'},
+        {icon:'🎥',label:'Live Monitor',page:'hod-live'},
+        {icon:'🔔',label:'Alerts',page:'hod-alerts'},
+        {s:'Academic Planner'},{icon:'🗓️',label:'Semester Calendar',page:'faculty-calendar'},
+        {icon:'📚',label:'Syllabus',page:'faculty-syllabus'},
+        {icon:'📝',label:'Lesson Plan',page:'faculty-lessonplan'},
+        {s:'Reports'},{icon:'📋',label:'Attendance Reports',page:'hod-reports'},
+        {icon:'📝',label:'Faculty Activity',page:'hod-faculty-log'},
+        {icon:'⚠️',label:'At-Risk Students',page:'hod-below75'},
+        {icon:'📊',label:'Daily Summary',page:'hod-daily'},
+        {s:'Downloads'},{icon:'📈',label:'Excel Reports',page:'hod-excel'},
+      ];
+    }else{
+      items=[
+        {s:'Overview'},{icon:'📊',label:'Dashboard',page:'hod-dash'},
+        {icon:'🎥',label:'Live Monitor',page:'hod-live'},
+        {icon:'🔔',label:'Alerts',page:'hod-alerts'},
+        {s:'Manage'},{icon:'👨‍🏫',label:'Faculty',page:'hod-faculty'},
+        {icon:'📅',label:'Timetable',page:'hod-timetable'},
+        {s:'Academic Planner'},{icon:'🗓️',label:'Semester Calendar',page:'faculty-calendar'},
+        {icon:'📚',label:'Syllabus',page:'faculty-syllabus'},
+        {icon:'📝',label:'Lesson Plan',page:'faculty-lessonplan'},
+        {s:'Reports'},{icon:'📋',label:'Attendance Reports',page:'hod-reports'},
+        {icon:'📝',label:'Faculty Activity',page:'hod-faculty-log'},
+        {icon:'⚠️',label:'At-Risk Students',page:'hod-below75'},
+        {icon:'📊',label:'Daily Summary',page:'hod-daily'},
+        {s:'Downloads'},{icon:'📈',label:'Excel Reports',page:'hod-excel'},
+        {icon:'📧',label:'Email Reports',page:'hod-email'},
+        {s:'AI'},{icon:'🧠',label:'Face Recognition',page:'hod-face'},
+      ];
+    }
+  }else{
+    items=[{s:'Admin'},{icon:'📊',label:'Dashboard',page:'hod-dash'}];
+  }
+  m.innerHTML=items.map(i=>i.s?`<div class="sidebar-section">${i.s}</div>`:
+    `<div class="sidebar-item" onclick="showPage('${i.page}',this)"><span class="icon">${i.icon}</span>${i.label}</div>`).join('');
+}
+
+function showPage(page,el){
+  document.querySelectorAll('.sidebar-item').forEach(e=>e.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const pg=document.getElementById(page);
+  if(pg){pg.classList.add('active');if(pg.dataset.init)window[pg.dataset.init]?.();}
+}
+
+// ── Toast ──
+function toast(msg,type='success'){
+  const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),3000);
+}
+
+// ── API Helper ──
+async function api(url,opts={}){
+  const r=await fetch(API+url,{...opts,headers:{...authHeaders(),...(opts.headers||{})}});
+  if(r.status===401){doLogout();return null}
+  return r;
+}
+
+// ══════════════════════════════════════════════════════════
+// BUILD PAGES — creates all HTML for each role
+// ══════════════════════════════════════════════════════════
+function buildPages(){
+  const mc=document.getElementById('mainContent');
+  if(ROLE==='faculty')mc.innerHTML=buildFacultyPages();
+  else if(ROLE==='student')mc.innerHTML=buildStudentPages();
+  else mc.innerHTML=buildHODPages();
+}
+
+
+// ═══ Page Builders ═══
+function buildFacultyPages(){return`
+<div class="page" id="faculty-dash" data-init="loadFacultyDash">
+  <div style="margin-bottom:24px">
+    <h2 id="fDashGreeting">Good Morning 👋</h2>
+    <p style="color:var(--text-muted);font-size:13px;margin-top:4px">Here's your attendance overview for today</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px" id="fDashStats"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div class="card"><h3><span class="card-icon teal" style="display:inline-flex;width:28px;height:28px;border-radius:7px;align-items:center;justify-content:center;font-size:13px;background:var(--accent-dim);color:var(--accent);margin-right:6px">📅</span> My Timetable Today</h3><div id="fDashTimetable"></div></div>
+    <div class="card"><h3><span class="card-icon red" style="display:inline-flex;width:28px;height:28px;border-radius:7px;align-items:center;justify-content:center;font-size:13px;background:var(--red-dim);color:var(--red);margin-right:6px">⚠️</span> Recent Activity</h3><div id="fDashRecent"></div></div>
+  </div>
+</div>
+<div class="page" id="faculty-students" data-init="loadFacultyStudents">
+  <h2>👥 Manage Students</h2>
+  <div class="card"><h3>➕ Add Student</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Roll No (USN)</label><input id="fAddRoll"></div>
+      <div class="form-group"><label>Name</label><input id="fAddName"></div>
+      <div class="form-group"><label>Email</label><input id="fAddEmail"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Semester</label><input id="fAddSem" type="number" value="8"></div>
+      <div class="form-group"><label>Dept</label><input id="fAddDept" value="AIML"></div>
+      <div class="form-group"><label>Phone</label><input id="fAddPhone"></div>
+    </div>
+    <button class="btn btn-primary" onclick="addStudentF()">➕ Add Student</button>
+  </div>
+  <div class="card"><h3>📋 Student List</h3>
+    <div class="form-row"><div class="form-group"><label>Semester</label><select id="fListSem"><option value="8">Sem 8</option></select></div>
+    <div class="form-group" style="align-self:end"><button class="btn btn-primary" onclick="loadFacultyStudentList()">Load</button></div></div>
+    <div id="fStudentTable"></div>
+  </div>
+</div>
+<div class="page" id="faculty-timetable" data-init="loadFacultyTimetable">
+  <h2>📅 My Timetable</h2>
+  <div class="card"><h3>➕ Add Slot</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Day</label><select id="fTTDay"><option>MON</option><option>TUE</option><option>WED</option><option>THU</option><option>FRI</option><option>SAT</option></select></div>
+      <div class="form-group"><label>Start</label><input id="fTTStart" value="09:00"></div>
+      <div class="form-group"><label>End</label><input id="fTTEnd" value="10:00"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Subject</label><input id="fTTSubject"></div>
+      <div class="form-group"><label>Semester</label><input id="fTTSem" type="number" value="8"></div>
+      <div class="form-group"><label>Room</label><input id="fTTRoom" value="AIML-LAB-1"></div>
+    </div>
+    <button class="btn btn-primary" onclick="addSlotF()">➕ Add Slot</button>
+  </div>
+  <div class="card"><h3>📋 My Slots</h3><div id="fTTTable"></div></div>
+</div>
+<div class="page" id="faculty-attendance" data-init="loadFacultyAttendance">
+  <h2>🤖 AI Attendance</h2>
+  <div class="card" style="border-color:var(--accent)">
+    <h3>📷 Take Attendance — Face Recognition</h3>
+    <p style="color:var(--text-secondary);margin-bottom:12px">Enter subject → Click Take Attendance → Camera opens & marks students as they appear</p>
+    <div class="form-row">
+      <div class="form-group"><label>Semester</label><select id="fAttSem"><option value="">Loading...</option></select></div>
+      <div class="form-group"><label>Subject</label><select id="fAttSubj"><option value="">Loading...</option></select></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn btn-success" onclick="takeAttendance()" id="btnTakeAtt" style="font-size:15px;padding:10px 24px">📷 Take Attendance</button>
+      <button class="btn btn-danger" onclick="stopAttendance()" id="btnStopAtt" style="display:none;font-size:15px;padding:10px 24px">⏹ Stop & Save</button>
+    </div>
+    <div class="camera-container" id="cameraContainer" style="display:none">
+      <video id="localVideo" autoplay muted playsinline></video>
+      <canvas id="overlayCanvas" class="camera-overlay"></canvas>
+      <div class="camera-status off" id="camStatus">OFF</div>
+    </div>
+    <div id="attLiveInfo" style="display:none">
+      <div class="alert-box alert-green" id="attLiveText">🤖 Scanning faces...</div>
+      <div id="attMarkedList" style="margin-top:10px"></div>
+    </div>
+    <div id="attendanceResult" style="display:none"></div>
+  </div>
+</div>
+<div class="page" id="faculty-register" data-init="loadFacultyRegister">
+  <h2>📋 Attendance Register</h2>
+  <div class="card">
+    <div class="form-row">
+      <div class="form-group"><label>Semester</label><select id="fRegSem"><option value="">Loading...</option></select></div>
+      <div class="form-group"><label>Subject</label><select id="fRegSubj"><option value="">Loading...</option></select></div>
+      <div class="form-group" style="align-self:end"><button class="btn btn-primary" onclick="loadRegisterGrid()">📋 Load Register</button></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn btn-success" onclick="downloadRegExcel()">📥 Excel</button>
+      <button class="btn btn-warning" onclick="downloadRegCSV()">📥 CSV</button>
+      <button class="btn btn-danger" onclick="toggleBelow75()" id="btnBelow75">⚠️ Show Below 75%</button>
+      <button class="btn btn-primary" onclick="showManualDate()">➕ Add Date</button>
+      <button class="btn btn-warning" onclick="showDeleteDate()">🗑 Delete Date</button>
+      <button class="btn btn-secondary" onclick="showMarkHoliday()">📅 Mark Holiday</button>
+    </div>
+  </div>
+  <div class="card" style="overflow-x:auto"><div id="fRegTable"></div></div>
+</div>
+<div class="page" id="faculty-reports" data-init="loadFacultyReports">
+  <h2>📈 Reports & Averages</h2>
+  <div class="card"><h3>📊 Class Averages</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Semester</label><input id="fRepSem" type="number" value="8"></div>
+      <div class="form-group"><label>Subject</label><input id="fRepSubj"></div>
+      <div class="form-group" style="align-self:end"><button class="btn btn-primary" onclick="loadAverages()">Load Averages</button></div>
+    </div>
+    <div id="fAvgTable"></div>
+  </div>
+  <div class="card"><h3>📥 Download Excel</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Semester</label><input id="fExSem" type="number" value="8"></div>
+      <div class="form-group"><label>Subject</label><input id="fExSubj"></div>
+      <div class="form-group" style="align-self:end"><button class="btn btn-success" onclick="downloadExcel()">📥 Download</button></div>
+    </div>
+  </div>
+</div>
+<div class="page" id="faculty-face" data-init="loadFacultyFace">
+  <h2>🧠 Face Recognition</h2>
+  <div class="card"><h3>📸 Register Student Face</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Roll Number</label><input id="fFaceRoll"></div>
+      <div class="form-group"><label>Face Photo (optional)</label><input type="file" id="fFaceFile" accept="image/*"></div>
+      <div class="form-group" style="align-self:end"><button class="btn btn-primary" onclick="registerFace()">📸 Upload Photo</button></div>
+    </div>
+    <div style="margin-top:4px"><button class="btn btn-success" onclick="captureFaceFromPage('fFaceRoll')">📷 Capture 60 Photos via Camera</button>
+    <span style="color:var(--text-secondary);font-size:12px;margin-left:8px">Opens webcam to auto-capture like adding a new student</span></div>
+    <div id="fFaceResult" style="margin-top:8px"></div>
+  </div>
+  <div class="card"><h3>🔄 Build Embeddings</h3>
+    <p style="color:var(--text-secondary);margin-bottom:8px">After registering faces, build embeddings to enable recognition</p>
+    <button class="btn btn-warning" onclick="buildEmbeddings()">🔄 Build Embeddings</button>
+    <div id="fBuildResult" style="margin-top:8px"></div>
+  </div>
+  <div class="card"><h3>📋 Registered Students</h3><div id="fRegisteredList"></div></div>
+</div>
+`+buildPlannerPages()}
+
+function buildPlannerPages(){
+const canEdit=ROLE==='faculty'||ROLE==='hod'||ROLE==='admin';
+return`
+<!-- ═══ ACADEMIC CALENDAR ═══ -->
+<div class="page" id="faculty-calendar" data-init="loadCalendar">
+  <h2>🗓️ Semester Calendar</h2>
+  <p style="color:var(--text-muted);font-size:13px;margin-top:2px;margin-bottom:20px">Mark semester start and end dates</p>
+  ${canEdit?`
+  <div class="card"><h3>➕ Set Semester Dates</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Semester</label><select id="calSem" style="width:100%;padding:8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-deep);color:var(--text-primary);font-size:13px">
+        <option value="1">Semester 1</option><option value="2">Semester 2</option><option value="3">Semester 3</option>
+        <option value="4">Semester 4</option><option value="5">Semester 5</option><option value="6">Semester 6</option>
+        <option value="7">Semester 7</option><option value="8">Semester 8</option>
+      </select></div>
+      <div class="form-group"><label>Year</label><input id="calYear" type="number" value="2026"></div>
+      <div class="form-group"><label>Label (optional)</label><input id="calLabel" placeholder="e.g. Even Sem 2025-26"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Semester Start</label><input id="calStart" type="date"></div>
+      <div class="form-group"><label>Semester End</label><input id="calEnd" type="date"></div>
+      <div class="form-group"><label>Working Days</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+          <label style="font-size:12px;color:var(--text-secondary)"><input type="checkbox" class="calWD" value="MON" checked> Mon</label>
+          <label style="font-size:12px;color:var(--text-secondary)"><input type="checkbox" class="calWD" value="TUE" checked> Tue</label>
+          <label style="font-size:12px;color:var(--text-secondary)"><input type="checkbox" class="calWD" value="WED" checked> Wed</label>
+          <label style="font-size:12px;color:var(--text-secondary)"><input type="checkbox" class="calWD" value="THU" checked> Thu</label>
+          <label style="font-size:12px;color:var(--text-secondary)"><input type="checkbox" class="calWD" value="FRI" checked> Fri</label>
+          <label style="font-size:12px;color:var(--text-secondary)"><input type="checkbox" class="calWD" value="SAT" checked> Sat</label>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveCalendar()">💾 Save Calendar</button>
+  </div>`:``}
+  <div class="card"><h3>📅 Saved Calendars</h3><div id="calList"></div></div>
+</div>
+
+<!-- ═══ SYLLABUS ═══ -->
+<div class="page" id="faculty-syllabus" data-init="loadSyllabus">
+  <h2>📚 Syllabus</h2>
+  <p style="color:var(--text-muted);font-size:13px;margin-top:2px;margin-bottom:20px">Upload syllabus — AI extracts all topics automatically</p>
+  ${canEdit?`
+  <div class="card"><h3>📤 Upload Syllabus (Image or PDF)</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Subject</label><input id="sylSubj" placeholder="e.g. Machine Learning"></div>
+      <div class="form-group"><label>Semester</label><input id="sylSem" type="number" value="4"></div>
+      <div class="form-group"><label>File (Image/PDF)</label><input type="file" id="sylFile" accept="image/*,.pdf"></div>
+    </div>
+    <button class="btn btn-primary" onclick="uploadSyllabus()" id="sylUploadBtn">🤖 Upload & Extract with AI</button>
+    <span id="sylUploadStatus" style="margin-left:10px;font-size:12px;color:var(--text-muted)"></span>
+  </div>`:``}
+  <div class="card"><h3>📋 Saved Syllabi</h3><div id="sylList"></div></div>
+  <div class="card" id="sylDetailCard" style="display:none"><h3>📖 Syllabus Details</h3><div id="sylDetail"></div></div>
+</div>
+
+<!-- ═══ LESSON PLAN ═══ -->
+<div class="page" id="faculty-lessonplan" data-init="loadLessonPlans">
+  <h2>📝 Lesson Plan</h2>
+  <p style="color:var(--text-muted);font-size:13px;margin-top:2px;margin-bottom:20px">AI generates day-by-day teaching plan from syllabus + calendar</p>
+  ${canEdit?`
+  <div class="card"><h3>🤖 Generate New Lesson Plan</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Subject</label><select id="lpSubj" style="width:100%;padding:8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-deep);color:var(--text-primary);font-size:13px"></select></div>
+      <div class="form-group"><label>Semester</label><input id="lpSem" type="number" value="4"></div>
+      <div class="form-group"><label>Calendar</label><select id="lpCal" style="width:100%;padding:8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-deep);color:var(--text-primary);font-size:13px"></select></div>
+    </div>
+    <button class="btn btn-primary" onclick="generateLessonPlan()" id="lpGenBtn">🤖 Generate Lesson Plan with AI</button>
+    <span id="lpGenStatus" style="margin-left:10px;font-size:12px;color:var(--text-muted)"></span>
+  </div>`:``}
+  <div class="card"><h3>📋 Active Lesson Plans</h3><div id="lpList"></div></div>
+  <div class="card" id="lpDetailCard" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <h3 id="lpDetailTitle">📝 Plan Details</h3>
+      <div id="lpProgressBar"></div>
+    </div>
+    <div id="lpActions" style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap"></div>
+    <div id="lpDays"></div>
+  </div>
+</div>
+`}
+
+// ── STUDENT PAGES ────────────────────────────────────────
+
+function buildStudentPages(){return`
+<div class="page" id="student-dash" data-init="loadStudentDash">
+  <div style="margin-bottom:24px">
+    <h2 id="sDashGreeting">Your Attendance 🎯</h2>
+    <p style="color:var(--text-muted);font-size:13px;margin-top:4px" id="sDashSub">Loading...</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px" id="sDashStats"></div>
+  <div id="sDashAlert"></div>
+  <div class="card"><h3><span class="card-icon blue" style="display:inline-flex;width:28px;height:28px;border-radius:7px;align-items:center;justify-content:center;font-size:13px;background:var(--blue-dim);color:var(--blue);margin-right:6px">📚</span> Subject-wise Breakdown</h3><div id="sDashSubjects"></div></div>
+</div>
+<div class="page" id="student-subjects" data-init="loadStudentSubjects">
+  <h2>📚 Subject Wise Attendance</h2>
+  <div id="sSubjectCards"></div>
+</div>
+<div class="page" id="student-records" data-init="loadStudentRecords">
+  <h2>📋 Day by Day Records</h2>
+  <div class="card">
+    <div class="form-row"><div class="form-group"><label>Filter by Subject</label>
+      <select id="sRecFilter"><option value="">All Subjects</option></select></div></div>
+    <div id="sRecTable"></div>
+  </div>
+</div>
+`+buildPlannerPages()}
+
+function buildHODPages(){return`
+<div class="page" id="hod-dash" data-init="loadHODDash">
+  <div style="margin-bottom:24px">
+    <h2>Department Overview 📊</h2>
+    <p style="color:var(--text-muted);font-size:13px;margin-top:4px">Real-time attendance monitoring across all classes</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px" id="hDashStats"></div>
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+    <div class="card"><h3><span class="card-icon blue" style="display:inline-flex;width:28px;height:28px;border-radius:7px;align-items:center;justify-content:center;font-size:13px;background:var(--blue-dim);color:var(--blue);margin-right:6px">📝</span> Faculty Activity — Today</h3><div id="hDashActivity"></div></div>
+    <div class="card"><h3><span class="card-icon red" style="display:inline-flex;width:28px;height:28px;border-radius:7px;align-items:center;justify-content:center;font-size:13px;background:var(--red-dim);color:var(--red);margin-right:6px">🔔</span> Alerts</h3><div id="hDashAlerts"></div></div>
+  </div>
+</div>
+<div class="page" id="hod-live" data-init="loadHODLive">
+  <h2>🎥 Live Monitor — Surveillance</h2>
+  <div class="card">
+    <h3>📷 Classroom Camera Feed</h3>
+    <p style="color:var(--text-secondary);margin-bottom:8px">Opens camera independently — works even when no faculty is taking attendance.</p>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn btn-success" onclick="startSurveillance()" id="btnStartSurv">🎥 Start Live Feed</button>
+      <button class="btn btn-danger" onclick="stopSurveillance()" id="btnStopSurv" style="display:none">⏹ Stop</button>
+    </div>
+    <div class="camera-container" id="survCamContainer" style="display:none">
+      <video id="survVideo" autoplay muted playsinline></video>
+      <canvas id="survOverlay" class="camera-overlay"></canvas>
+      <div class="camera-status live" id="survStatus">🔴 LIVE</div>
+    </div>
+    <div id="survInfo" style="margin-top:8px"></div>
+    <div id="survDetections" style="margin-top:8px"></div>
+  </div>
+  <div class="card">
+    <h3>📊 Class Status</h3>
+    <div id="liveStatus"></div>
+  </div>
+</div>
+<div class="page" id="hod-alerts" data-init="loadHODAlerts">
+  <h2>🔔 Alerts</h2>
+  <div class="card"><h3>📋 Alert History</h3><div id="hAlertList"></div></div>
+</div>
+<div class="page" id="hod-faculty" data-init="loadHODFaculty">
+  <h2>👨‍🏫 Manage Faculty</h2>
+  <div class="card"><h3>➕ Add Faculty</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Username</label><input id="hFacUser" placeholder="e.g. rayyan"></div>
+      <div class="form-group"><label>Password</label><input id="hFacPass" type="password" placeholder="e.g. ray123"></div>
+      <div class="form-group"><label>Email (optional)</label><input id="hFacEmail" placeholder="e.g. rayyan@aiml.edu"></div>
+    </div>
+    <button class="btn btn-primary" onclick="addFaculty()">➕ Add Faculty</button>
+    <p style="color:var(--text-muted);font-size:12px;margin-top:6px">After adding faculty, go to Timetable → add slots → assign subjects to them</p>
+  </div>
+  <div class="card"><h3>📋 Faculty List</h3>
+    <div id="hFacultyTable"></div>
+  </div>
+</div>
+<div class="page" id="hod-reports" data-init="loadHODReports">
+  <h2>📋 Attendance Reports</h2>
+  <div class="card">
+    <div class="form-row">
+      <div class="form-group"><label>Semester</label><select id="hRepSem"><option value="">All</option></select></div>
+      <div class="form-group"><label>Subject</label><select id="hRepSubj"><option value="">All</option></select></div>
+      <div class="form-group"><label>Faculty</label><select id="hRepFac"><option value="">All</option></select></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="loadHODRegisterGrid()">📋 Load Register</button>
+      <button class="btn btn-success" onclick="downloadHODRegExcel()">📥 Excel</button>
+      <button class="btn btn-warning" onclick="downloadHODRegCSV()">📥 CSV</button>
+      <button class="btn btn-danger" id="hBtnBelow75" onclick="toggleHODBelow75()">⚠️ Show Below 75%</button>
+    </div>
+  </div>
+  <div class="card" style="overflow-x:auto"><div id="hRegTable"></div></div>
+</div>
+<div class="page" id="hod-faculty-log" data-init="loadHODFacultyLog">
+  <h2>📝 Faculty Activity Log</h2>
+  <div class="card">
+    <div class="form-row">
+      <div class="form-group"><label>Faculty</label><select id="hLogFac"><option value="">All</option></select></div>
+      <div class="form-group"><label>From</label><input type="date" id="hLogFrom"></div>
+      <div class="form-group"><label>To</label><input type="date" id="hLogTo"></div>
+      <div class="form-group" style="align-self:end"><button class="btn btn-primary" onclick="loadFacultyLogData()">Load</button></div>
+    </div>
+  </div>
+  <div class="card"><div id="hLogTable"></div></div>
+</div>
+<div class="page" id="hod-below75" data-init="loadHODBelow75">
+  <h2>⚠️ At-Risk Students (Below 75%)</h2>
+  <div class="card">
+    <div class="form-row">
+      <div class="form-group"><label>Semester</label><select id="hB75Sem"><option value="">All</option></select></div>
+      <div class="form-group"><label>Subject</label><select id="hB75Subj"><option value="">All</option></select></div>
+      <div class="form-group" style="align-self:end"><button class="btn btn-primary" onclick="loadBelow75Data()">Load</button></div>
+    </div>
+  </div>
+  <div class="card"><div id="hB75Stats"></div><div id="hB75Table" style="margin-top:12px"></div></div>
+</div>
+<div class="page" id="hod-daily" data-init="loadHODDaily">
+  <h2>📊 Daily Class Summary</h2>
+  <div class="card">
+    <div class="form-row">
+      <div class="form-group"><label>Date</label><input type="date" id="hDailyDate"></div>
+      <div class="form-group" style="align-self:end"><button class="btn btn-primary" onclick="loadDailyData()">Load</button></div>
+    </div>
+  </div>
+  <div class="card"><div id="hDailyStats"></div><div id="hDailyTable" style="margin-top:12px"></div></div>
+</div>
+<div class="page" id="hod-timetable" data-init="loadHODTimetable">
+  <h2>📅 Timetable</h2>
+  <div class="card"><h3>➕ Add Slot</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Day</label><select id="hTTDay"><option>MON</option><option>TUE</option><option>WED</option><option>THU</option><option>FRI</option><option>SAT</option></select></div>
+      <div class="form-group"><label>Start</label><input id="hTTStart" value="09:00"></div>
+      <div class="form-group"><label>End</label><input id="hTTEnd" value="10:00"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Subject</label><input id="hTTSubject"></div>
+      <div class="form-group"><label>Faculty</label><select id="hTTFaculty"><option value="">Loading...</option></select></div>
+      <div class="form-group"><label>Semester</label><input id="hTTSem" type="number" value="8"></div>
+      <div class="form-group"><label>Room</label><input id="hTTRoom" value="AIML-LAB-1"></div>
+    </div>
+    <button class="btn btn-primary" onclick="addSlotH()">➕ Add Slot</button>
+  </div>
+  <div class="card"><h3>📋 All Slots</h3><div id="hTTTable"></div></div>
+</div>
+<div class="page" id="hod-excel" data-init="loadHODExcel">
+  <h2>📈 Excel Reports</h2>
+  <div class="card">
+    <div class="form-row">
+      <div class="form-group"><label>Semester</label><input id="hExSem" type="number" value="8"></div>
+      <div class="form-group"><label>Subject</label><input id="hExSubj"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-success" onclick="downloadExcelH()">📥 Subject Excel</button>
+      <button class="btn btn-primary" onclick="downloadZipH()">📦 Semester ZIP</button>
+    </div>
+  </div>
+</div>
+<div class="page" id="hod-email">
+  <h2>📧 Email Reports</h2>
+  <div class="card">
+    <p style="color:var(--text-secondary);margin-bottom:12px">Send attendance report emails to all students</p>
+    <div class="form-row"><div class="form-group"><label>Semester</label><input id="hEmSem" type="number" value="8"></div></div>
+    <button class="btn btn-primary" onclick="toast('Email feature sends via SMTP when configured','success')">📧 Send Reports</button>
+  </div>
+</div>
+<div class="page" id="hod-face" data-init="loadHODFace">
+  <h2>🧠 Face Recognition</h2>
+  <div class="card"><h3>📸 Register Face</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Roll Number</label><input id="hFaceRoll"></div>
+      <div class="form-group"><label>Photo (optional)</label><input type="file" id="hFaceFile" accept="image/*"></div>
+      <div class="form-group" style="align-self:end"><button class="btn btn-primary" onclick="registerFaceH()">📸 Upload Photo</button></div>
+    </div>
+    <div style="margin-top:4px"><button class="btn btn-success" onclick="captureFaceFromPage('hFaceRoll')">📷 Capture 60 Photos via Camera</button></div>
+    <div id="hFaceResult"></div>
+  </div>
+  <div class="card"><h3>🔄 Build Embeddings</h3>
+    <button class="btn btn-warning" onclick="buildEmbeddingsH()">🔄 Build</button>
+    <div id="hBuildResult" style="margin-top:8px"></div>
+  </div>
+  <div class="card"><h3>📋 Registered</h3><div id="hRegisteredList"></div></div>
+</div>
+`+buildPlannerPages()}
+// ══════════════════════════════════════════════════════════
+
+
+// ═══ Data Functions ═══
+async function loadFacultyDash(){
+  try{
+    const r=await api('/timetable/');const slots=await r.json();
+    const mySlots=slots.filter(s=>s.faculty===USERNAME);
+    const subjects=[...new Set(mySlots.map(s=>s.subject))];
+    const semesters=[...new Set(mySlots.map(s=>s.semester))];
+
+    // Greeting
+    const hr=new Date().getHours();
+    const greet=hr<12?'Good Morning':hr<17?'Good Afternoon':'Good Evening';
+    document.getElementById('fDashGreeting').innerHTML=`${greet}, ${USERNAME} 👋`;
+
+    // Get live status
+    const lr=await api('/live/status');const ls=await lr.json();
+
+    // Today's timetable info
+    const days=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const today=days[new Date().getDay()];
+    const todaySlots=mySlots.filter(s=>s.day===today);
+
+    // 4 Stat Cards with corner accents
+    document.getElementById('fDashStats').innerHTML=`
+      <div class="stat-card c-teal" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:var(--accent);opacity:.08"></div>
+        <div class="label">My Subjects</div>
+        <div class="value green" style="font-family:var(--font-display);font-size:32px;font-weight:800">${subjects.length||'—'}</div>
+        <div style="font-size:11px;color:var(--accent);margin-top:6px">↑ ${subjects.join(', ')||'None'}</div>
+      </div>
+      <div class="stat-card c-blue" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:var(--blue);opacity:.08"></div>
+        <div class="label">Classes Today</div>
+        <div class="value" style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--blue)">${todaySlots.length}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Semesters: ${semesters.join(', ')||'—'}</div>
+      </div>
+      <div class="stat-card c-red" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:var(--red);opacity:.08"></div>
+        <div class="label">Class Status</div>
+        <div class="value ${ls.is_active?'green':'red'}" style="font-family:var(--font-display);font-size:32px;font-weight:800">${ls.is_active?'🟢 LIVE':'🔴 OFF'}</div>
+        <div style="font-size:11px;color:${ls.is_active?'var(--accent)':'var(--red)'};margin-top:6px">${ls.is_active?'↑ Taking attendance':'Idle'}</div>
+      </div>
+      <div class="stat-card c-yellow" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:var(--yellow);opacity:.08"></div>
+        <div class="label">Semesters</div>
+        <div class="value yellow" style="font-family:var(--font-display);font-size:32px;font-weight:800">${semesters.length}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">${semesters.map(s=>'Sem '+s).join(', ')||'—'}</div>
+      </div>`;
+
+    // Today's timetable
+    if(todaySlots.length){
+      document.getElementById('fDashTimetable').innerHTML=`<table><tr><th>Time</th><th>Subject</th><th>Sem</th><th>Room</th></tr>
+        ${todaySlots.map(s=>`<tr><td style="color:var(--text-primary);font-weight:500">${s.start}-${s.end}</td><td>${s.subject}</td><td>${s.semester}</td><td>${s.room||'—'}</td></tr>`).join('')}</table>`;
+    }else{
+      document.getElementById('fDashTimetable').innerHTML='<p style="color:var(--text-muted)">No classes scheduled today</p>';
+    }
+
+    // Recent activity panel
+    let recentHtml='<div style="display:flex;flex-direction:column;gap:10px">';
+    if(ls.is_active){
+      recentHtml+=`<div style="padding:12px;border-radius:var(--radius-sm);background:var(--accent-dim);border-left:3px solid var(--accent)">
+        <div style="font-size:12px;font-weight:600;color:var(--accent)">Class In Progress</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${ls.subject||'Unknown'} — ${ls.marked||0} students marked</div></div>`;
+    }
+    recentHtml+=`<div style="padding:12px;border-radius:var(--radius-sm);background:var(--blue-dim);border-left:3px solid var(--blue)">
+      <div style="font-size:12px;font-weight:600;color:var(--blue)">Assigned Subjects</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${subjects.join(', ')||'No subjects assigned yet'}</div></div>`;
+    recentHtml+=`<div style="padding:12px;border-radius:var(--radius-sm);background:var(--yellow-dim);border-left:3px solid var(--yellow)">
+      <div style="font-size:12px;font-weight:600;color:var(--yellow)">Today's Schedule</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${todaySlots.length} class${todaySlots.length!==1?'es':''} on ${today}</div></div>`;
+    recentHtml+='</div>';
+    document.getElementById('fDashRecent').innerHTML=recentHtml;
+
+    // Auto-fill subject fields
+    if(subjects.length){
+      ['fAttSubj','fRepSubj','fExSubj','fTTSubject'].forEach(id=>{
+        const el=document.getElementById(id);if(el&&!el.value)el.value=subjects[0];
+      });
+    }
+  }catch(e){console.error(e)}
+}
+
+async function loadFacultyStudents(){
+  // Load this faculty's semesters from timetable, then load students
+  try{
+    const r=await api('/timetable/my-subjects');const d=await r.json();
+    const sel=document.getElementById('fListSem');
+    if(d.semesters.length>0){
+      sel.innerHTML='';
+      d.semesters.forEach(s=>{sel.innerHTML+=`<option value="${s}">Sem ${s}</option>`});
+    }
+  }catch(e){}
+  loadFacultyStudentList();
+}
+
+async function loadFacultyStudentList(){
+  const sem=document.getElementById('fListSem')?.value||8;
+  try{
+    const r=await api(`/students/list?semester=${sem}`);const d=await r.json();
+    document.getElementById('fStudentTable').innerHTML=d.length?
+      `<table><tr><th>Roll No</th><th>Name</th><th>Email</th><th>Phone</th><th>Action</th></tr>
+      ${d.map(s=>`<tr><td>${s.roll_no}</td><td>${s.name}</td><td>${s.email||'—'}</td><td>${s.phone||'—'}</td>
+        <td><button class="btn btn-primary btn-sm" onclick="editStudent('${s.roll_no}')" style="margin-right:4px">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.roll_no}','f')">🗑</button></td></tr>`).join('')}</table>`:
+      '<p style="color:var(--text-muted)">No students</p>';
+  }catch(e){toast(e.message,'error')}
+}
+
+async function addStudentF(){
+  const roll=document.getElementById('fAddRoll').value.trim();
+  const name=document.getElementById('fAddName').value.trim();
+  if(!roll||!name){toast('Roll No and Name are required','error');return}
+  try{
+    const r=await api('/students/add',{method:'POST',body:JSON.stringify({
+      roll_no:roll,
+      name:name,
+      semester:parseInt(document.getElementById('fAddSem').value),
+      dept:document.getElementById('fAddDept').value.trim(),
+      email:document.getElementById('fAddEmail').value.trim(),
+      phone:document.getElementById('fAddPhone').value.trim(),
+    })});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail);
+    toast('Student added! Opening camera for face capture...');loadFacultyStudents();
+    openFaceCaptureModal(roll,name);
+  }catch(e){toast(e.message,'error')}
+}
+
+async function deleteStudent(roll,prefix){
+  if(!confirm(`Delete ${roll}?`))return;
+  try{
+    const r=await api(`/students/delete/${roll}`,{method:'DELETE'});
+    if(!r.ok)throw new Error((await r.json()).detail);
+    toast('Deleted');
+    if(prefix==='f')loadFacultyStudents();else loadHODStudents();
+  }catch(e){toast(e.message,'error')}
+}
+
+async function loadFacultyTimetable(){
+  try{
+    const r=await api('/timetable/');const slots=await r.json();
+    const my=slots.filter(s=>s.faculty===USERNAME);
+    document.getElementById('fTTTable').innerHTML=my.length?
+      `<table><tr><th>Day</th><th>Time</th><th>Subject</th><th>Sem</th><th>Room</th><th>Action</th></tr>
+      ${my.map(s=>`<tr><td>${s.day}</td><td>${s.start}-${s.end}</td><td>${s.subject}</td><td>${s.semester}</td><td>${s.room||'—'}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteSlot(${s.id},'f')">🗑</button></td></tr>`).join('')}</table>`:
+      '<p style="color:var(--text-muted)">No slots assigned</p>';
+  }catch(e){toast(e.message,'error')}
+}
+
+async function addSlotF(){
+  try{
+    const r=await api('/timetable/add',{method:'POST',body:JSON.stringify({
+      day_name:document.getElementById('fTTDay').value,start_time:document.getElementById('fTTStart').value,
+      end_time:document.getElementById('fTTEnd').value,subject:document.getElementById('fTTSubject').value,
+      semester:parseInt(document.getElementById('fTTSem').value),faculty_username:USERNAME,
+      room:document.getElementById('fTTRoom').value,
+    })});if(!r.ok)throw new Error((await r.json()).detail);
+    toast('Slot added');loadFacultyTimetable();
+  }catch(e){toast(e.message,'error')}
+}
+
+async function deleteSlot(id,prefix){
+  if(!confirm('Delete slot?'))return;
+  try{await api(`/timetable/${id}`,{method:'DELETE'});toast('Deleted');
+    if(prefix==='f')loadFacultyTimetable();else loadHODTimetable();
+  }catch(e){toast(e.message,'error')}
+}
+
+// ── Take Attendance — Like reference track_images() ──────
+// Single flow: Take Attendance → camera opens → faces marked in real-time → Stop
+let localStream=null, frameRunning=false, markedStudents={};
+
+async function takeAttendance(){
+  const sem=parseInt(document.getElementById('fAttSem').value)||8;
+  const subj=document.getElementById('fAttSubj').value.trim();
+  if(!subj){toast('Enter a subject name!','error');return}
+
+  // Step 1: Start attendance session on server
+  try{
+    const r=await api('/live/start-attendance',{method:'POST',body:JSON.stringify({
+      semester:sem, subject:subj, faculty_name:USERNAME, threshold:0.4
+    })});
+    if(!r||!r.ok){
+      const d=r?await r.json():{detail:'Server error'};
+      throw new Error(d.detail||'Failed to start');
+    }
+    const d=await r.json();
+    toast(d.message);
+  }catch(e){toast(e.message,'error');return}
+
+  // Step 2: Open webcam
+  try{
+    localStream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480}});
+    document.getElementById('localVideo').srcObject=localStream;
+    document.getElementById('cameraContainer').style.display='block';
+    document.getElementById('camStatus').textContent='🔴 SCANNING';
+    document.getElementById('camStatus').className='camera-status live';
+  }catch(e){toast('Camera error: '+e.message+'. Allow camera permission in browser.','error');return}
+
+  // Step 3: Update UI
+  markedStudents={};
+  document.getElementById('btnTakeAtt').style.display='none';
+  document.getElementById('btnStopAtt').style.display='';
+  document.getElementById('attLiveInfo').style.display='block';
+  document.getElementById('attendanceResult').style.display='none';
+  document.getElementById('attLiveText').textContent=`🤖 Scanning faces for ${subj} (Sem ${sem})... Students marked as they appear`;
+  document.getElementById('attMarkedList').innerHTML='<p style="color:var(--text-muted);font-size:13px">Waiting for faces...</p>';
+  toast(`Attendance started for ${subj}! Point camera at students.`);
+
+  // Step 4: Start sending frames (sequential — like reference code's while loop)
+  frameRunning=true;
+  sendFrameLoop();
+}
+
+async function sendFrameLoop(){
+  const video=document.getElementById('localVideo');
+  const canvas=document.createElement('canvas');
+  canvas.width=640; canvas.height=480;
+  const ctx=canvas.getContext('2d');
+
+  while(frameRunning && localStream){
+    try{
+      ctx.drawImage(video,0,0,640,480);
+      const data=canvas.toDataURL('image/jpeg',0.6);
+
+      const fd=new FormData();
+      fd.append('frame',data);
+      const r=await fetch(API+'/live/process-frame',{
+        method:'POST', headers:{Authorization:'Bearer '+TOKEN}, body:fd
+      });
+
+      if(!r.ok){await new Promise(ok=>setTimeout(ok,500));continue}
+      const d=await r.json();
+
+      // Draw face boxes on overlay (green=known, red=unknown)
+      if(d.faces && d.faces.length>0){
+        drawDetections(d.faces);
+      }else{
+        clearOverlay();
+      }
+
+      // Handle newly marked students (real-time marking like reference)
+      if(d.newly_marked && d.newly_marked.length>0){
+        d.newly_marked.forEach(s=>{
+          markedStudents[s.roll_no]={name:s.name,score:s.score,time:new Date().toLocaleTimeString()};
+          toast(`✅ Marked: ${s.name} (${s.roll_no})`);
+        });
+      }
+
+      // Auto-stop after 20 minutes
+      if(d.auto_stopped){
+        toast('⏱ 20 minutes reached — auto-stopping attendance...','success');
+        stopAttendance();
+        return;
+      }
+
+      // Update recognized count display
+      const count=d.recognized_count||Object.keys(markedStudents).length;
+      const elapsed=d.elapsed||0;
+      const mins=Math.floor(elapsed/60);const secs=elapsed%60;
+      document.getElementById('attLiveText').textContent=
+        `🤖 Scanning... ${mins}:${String(secs).padStart(2,'0')} elapsed | ✅ ${count} students marked present`;
+
+      // Update marked students list
+      updateMarkedList();
+
+      // Small delay between frames
+      await new Promise(ok=>setTimeout(ok,200));
+
+    }catch(e){
+      console.error('[FRAME]',e);
+      await new Promise(ok=>setTimeout(ok,1000));
+    }
+  }
+}
+
+function updateMarkedList(){
+  const entries=Object.entries(markedStudents);
+  if(entries.length===0){
+    document.getElementById('attMarkedList').innerHTML='<p style="color:var(--text-muted);font-size:13px">Waiting for faces...</p>';
+    return;
+  }
+  let html='<table><tr><th>#</th><th>Roll No</th><th>Name</th><th>Score</th><th>Time</th></tr>';
+  entries.forEach(([roll,info],i)=>{
+    html+=`<tr><td>${i+1}</td><td><b>${roll}</b></td><td>${info.name}</td>
+      <td><span class="badge badge-p">${(info.score*100).toFixed(0)}%</span></td>
+      <td>${info.time}</td></tr>`;
+  });
+  html+='</table>';
+  document.getElementById('attMarkedList').innerHTML=html;
+}
+
+function drawDetections(faces){
+  const canvas=document.getElementById('overlayCanvas');
+  const video=document.getElementById('localVideo');
+  canvas.width=video.videoWidth||640; canvas.height=video.videoHeight||480;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  faces.forEach(f=>{
+    const [x1,y1,x2,y2]=f.bbox;
+    const color=f.known?'var(--accent)':'var(--red)';
+    // Box
+    ctx.strokeStyle=color; ctx.lineWidth=3;
+    ctx.strokeRect(x1,y1,x2-x1,y2-y1);
+    // Label
+    const name=f.name||f.roll_no;
+    const label=f.known?`${name} (${(f.score*100).toFixed(0)}%)`:'Unknown';
+    ctx.font='bold 14px Segoe UI, sans-serif';
+    const tw=ctx.measureText(label).width;
+    ctx.fillStyle=color;
+    ctx.fillRect(x1,y1-24,tw+10,24);
+    ctx.fillStyle='#fff';
+    ctx.fillText(label,x1+5,y1-7);
+  });
+}
+
+function clearOverlay(){
+  const c=document.getElementById('overlayCanvas');
+  if(c){const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height)}
+}
+
+async function stopAttendance(){
+  // Stop frame loop
+  frameRunning=false;
+
+  // Tell server to finalize (mark absent students + update Excel)
+  document.getElementById('attLiveText').textContent='⏳ Saving attendance & marking absent students...';
+  try{
+    const r=await api('/live/stop-attendance',{method:'POST'});
+    const d=await r.json();
+
+    // Stop camera
+    if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null}
+    document.getElementById('cameraContainer').style.display='none';
+    document.getElementById('camStatus').textContent='OFF';
+    document.getElementById('camStatus').className='camera-status off';
+    clearOverlay();
+
+    // Show result
+    document.getElementById('attLiveInfo').style.display='none';
+    document.getElementById('attendanceResult').style.display='block';
+
+    let presentHtml='';
+    if(d.present && d.present.length>0){
+      presentHtml='<table style="margin-top:10px"><tr><th>#</th><th>Roll No</th><th>Name</th><th>Score</th><th>Marked At</th></tr>';
+      d.present.forEach((s,i)=>{
+        presentHtml+=`<tr><td>${i+1}</td><td><b>${s.roll_no}</b></td><td>${s.name}</td>
+          <td><span class="badge badge-p">${(s.score*100).toFixed(0)}%</span></td>
+          <td>${s.time}</td></tr>`;
+      });
+      presentHtml+='</table>';
+    }
+
+    document.getElementById('attendanceResult').innerHTML=`
+      <div class="alert-box alert-green"><b>✅ ${d.message}</b></div>
+      <div class="stats-row" style="margin-top:12px">
+        <div class="stat-card"><div class="label">Subject</div><div class="value">${d.subject||''}</div></div>
+        <div class="stat-card"><div class="label">Duration</div><div class="value">${d.duration||''}</div></div>
+        <div class="stat-card"><div class="label">Present</div><div class="value green">${d.present_count||0}</div></div>
+        <div class="stat-card"><div class="label">Absent</div><div class="value red">${d.absent_count||0}</div></div>
+        <div class="stat-card"><div class="label">Total</div><div class="value">${d.total||0}</div></div>
+      </div>
+      ${presentHtml}`;
+
+    toast(`✅ Done! ${d.present_count} present, ${d.absent_count} absent`);
+  }catch(e){
+    toast('Error stopping: '+e.message,'error');
+  }
+
+  // Reset buttons
+  document.getElementById('btnTakeAtt').style.display='';
+  document.getElementById('btnStopAtt').style.display='none';
+}
+
+
+function loadFacultyAttendance(){
+  // Load this faculty's subjects and semesters from timetable
+  api('/timetable/my-subjects').then(r=>r.json()).then(d=>{
+    const semSel=document.getElementById('fAttSem');
+    const subSel=document.getElementById('fAttSubj');
+    semSel.innerHTML='';subSel.innerHTML='';
+    if(d.semesters.length===0){
+      semSel.innerHTML='<option value="">No semesters assigned</option>';
+      subSel.innerHTML='<option value="">No subjects assigned</option>';
+      return;
+    }
+    d.semesters.forEach(s=>{semSel.innerHTML+=`<option value="${s}">Sem ${s}</option>`});
+    d.subjects.forEach(s=>{subSel.innerHTML+=`<option value="${s}">${s}</option>`});
+    // Auto-select current slot if available
+    api('/timetable/current-slot').then(r2=>r2.json()).then(cs=>{
+      if(cs.found){semSel.value=cs.semester;subSel.value=cs.subject}
+    }).catch(()=>{});
+  }).catch(()=>{});
+}
+
+// ── Faculty Register ──────────────────────────────────────
+let registerData=null, showBelow75Only=false;
+
+function loadFacultyRegister(){
+  api('/timetable/my-subjects').then(r=>r.json()).then(d=>{
+    const ss=document.getElementById('fRegSem'),su=document.getElementById('fRegSubj');
+    ss.innerHTML='';su.innerHTML='';
+    d.semesters.forEach(s=>{ss.innerHTML+=`<option value="${s}">Sem ${s}</option>`});
+    d.subjects.forEach(s=>{su.innerHTML+=`<option value="${s}">${s}</option>`});
+  }).catch(()=>{});
+}
+
+async function loadRegisterGrid(){
+  const sem=document.getElementById('fRegSem').value;
+  const subj=document.getElementById('fRegSubj').value;
+  if(!sem||!subj){toast('Select semester and subject','error');return}
+  try{
+    const r=await api(`/attendance/register?semester=${sem}&subject=${subj}`);
+    registerData=await r.json();
+    renderRegister();
+  }catch(e){toast(e.message,'error')}
+}
+
+function renderRegister(){
+  if(!registerData){document.getElementById('fRegTable').innerHTML='<p style="color:var(--text-muted)">Load register first</p>';return}
+  const d=registerData;
+  let students=d.students;
+  if(showBelow75Only) students=students.filter(s=>s.below_75);
+
+  if(!d.dates.length){document.getElementById('fRegTable').innerHTML='<p style="color:var(--text-muted)">No attendance records yet</p>';return}
+
+  let html='<table style="font-size:12px"><tr><th>Roll No</th><th>Name</th>';
+  d.dates.forEach(dt=>{const short=dt.slice(5);const isH=d.holidays&&d.holidays[dt];if(isH){html+=`<th style="writing-mode:vertical-lr;padding:4px;font-size:10px;background:var(--yellow-dim);color:var(--yellow);cursor:pointer" title="${d.holidays[dt]}" onclick="unmarkHoliday('${dt}')">H</th>`}else{html+=`<th style="writing-mode:vertical-lr;padding:4px;font-size:10px;cursor:pointer" title="Click to delete" onclick="deleteDate('${dt}')">${short}</th>`}});
+  html+='<th>Total</th><th>P</th><th>A</th><th>%</th></tr>';
+
+  students.forEach(s=>{
+    const rowColor=s.below_75?'style="background:#ff6b6b08"':'';
+    html+=`<tr ${rowColor}><td><b>${s.roll_no}</b></td><td>${s.name}</td>`;
+    d.dates.forEach(dt=>{
+      const isH=d.holidays&&d.holidays[dt];
+      if(isH){html+=`<td style="text-align:center;background:var(--yellow-dim);padding:2px"><span style="font-size:10px;color:var(--yellow)">H</span></td>`}
+      else{const st=s.attendance[dt]||'-';const cls=st==='P'?'badge-p':st==='A'?'badge-a':'';const click=`onclick="toggleAtt('${s.roll_no}','${dt}','${registerData.subject}')"`;html+=`<td style="text-align:center;cursor:pointer;padding:2px" ${click}><span class="badge ${cls}" style="font-size:10px">${st}</span></td>`}
+    });
+    html+=`<td>${s.total}</td><td style="color:var(--accent)">${s.present}</td><td style="color:var(--red)">${s.absent}</td>`;
+    const pctColor=s.below_75?(s.percentage<60?'var(--red)':'var(--yellow)'):'var(--accent)';
+    html+=`<td><b style="color:${s.below_75?'var(--red)':'var(--accent)'}">${s.percentage}%</b> <div style="height:4px;background:var(--border);border-radius:2px;width:50px;display:inline-block;vertical-align:middle;margin-left:4px;overflow:hidden"><div style="height:100%;width:${s.percentage}%;background:${pctColor};border-radius:2px"></div></div></td></tr>`;
+  });
+  html+='</table>';
+  document.getElementById('fRegTable').innerHTML=html;
+}
+
+async function toggleAtt(roll,day,subject){
+  const current=registerData.students.find(s=>s.roll_no===roll)?.attendance[day];
+  const newStatus=current==='P'?'A':'P';
+  try{
+    const r=await api('/attendance/override',{method:'POST',body:JSON.stringify({roll_no:roll,subject:subject,day:day,status:newStatus})});
+    if(!r.ok){const d=await r.json();throw new Error(d.detail||'Failed')}
+    toast(`${roll}: ${current} → ${newStatus}`);
+    loadRegisterGrid();
+  }catch(e){toast(e.message,'error')}
+}
+
+function toggleBelow75(){
+  showBelow75Only=!showBelow75Only;
+  document.getElementById('btnBelow75').textContent=showBelow75Only?'👥 Show All':'⚠️ Show Below 75%';
+  renderRegister();
+}
+
+async function downloadRegExcel(){
+  const sem=document.getElementById('fRegSem').value;
+  const subj=document.getElementById('fRegSubj').value;
+  if(!subj){toast('Load register first','error');return}
+  try{
+    const r=await fetch(API+`/excel/subject/${sem}/${subj}`,{headers:{Authorization:'Bearer '+TOKEN}});
+    if(!r.ok){const d=await r.json();throw new Error(d.detail)}
+    const blob=await r.blob();
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download=`${subj}_Sem${sem}.xlsx`;a.click();URL.revokeObjectURL(a.href);
+    toast('Excel downloaded!');
+  }catch(e){toast(e.message,'error')}
+}
+
+async function downloadRegCSV(){
+  const sem=document.getElementById('fRegSem').value;
+  const subj=document.getElementById('fRegSubj').value;
+  if(!subj){toast('Load register first','error');return}
+  try{
+    const r=await fetch(API+`/attendance/register/csv?semester=${sem}&subject=${subj}`,{headers:{Authorization:'Bearer '+TOKEN}});
+    if(!r.ok)throw new Error('Failed');
+    const blob=await r.blob();
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download=`${subj}_Sem${sem}_Register.csv`;a.click();URL.revokeObjectURL(a.href);
+    toast('CSV downloaded!');
+  }catch(e){toast(e.message,'error')}
+}
+
+// ── Edit Student Modal ───────────────────────────────────
+async function editStudent(roll){
+  const name=prompt('Enter new name (or leave blank to keep):');
+  const email=prompt('Enter email (or leave blank to keep):');
+  const phone=prompt('Enter phone (or leave blank to keep):');
+  const sem=prompt('Enter semester (or leave blank to keep):');
+  if(name===null)return; // cancelled
+  try{
+    // Get current data first
+    const sem_val=document.getElementById('fListSem')?.value||document.getElementById('hListSem')?.value||8;
+    const lr=await api(`/students/list?semester=${sem_val}`);const students=await lr.json();
+    const st=students.find(s=>s.roll_no===roll);
+    if(!st){toast('Student not found','error');return}
+    const r=await api(`/students/update/${roll}`,{method:'PUT',body:JSON.stringify({
+      roll_no:roll, name:name||st.name, semester:parseInt(sem)||st.semester,
+      dept:st.dept||'AIML', email:email||st.email||'', phone:phone||st.phone||''
+    })});
+    if(!r.ok){const d=await r.json();throw new Error(d.detail)}
+    toast('Student updated!');
+    try{loadFacultyStudents()}catch(e){}
+    try{loadHODStudents()}catch(e){}
+  }catch(e){toast(e.message,'error')}
+}
+
+// ── Reports ──
+async function loadAverages(){
+  const sem=document.getElementById('fRepSem').value;
+  const subj=document.getElementById('fRepSubj').value;
+  if(!subj){toast('Enter subject','error');return}
+  try{
+    const r=await api(`/attendance/averages?semester=${sem}&subject=${subj}`);const d=await r.json();
+    document.getElementById('fAvgTable').innerHTML=`
+      <div class="alert-box alert-green" style="margin-bottom:12px">Overall Average: <b>${d.overall_average}%</b></div>
+      <table><tr><th>Roll No</th><th>Name</th><th>Total</th><th>Present</th><th>Absent</th><th>%</th></tr>
+      ${d.students.map(s=>`<tr><td>${s.roll_no}</td><td>${s.name}</td><td>${s.total}</td><td>${s.present}</td><td>${s.absent}</td>
+        <td><span class="badge ${s.below_75?'badge-a':'badge-p'}">${s.percentage}%</span></td></tr>`).join('')}</table>`;
+  }catch(e){toast(e.message,'error')}
+}
+function loadFacultyReports(){}
+
+async function downloadExcel(){
+  const sem=document.getElementById('fExSem').value;
+  const subj=document.getElementById('fExSubj').value;
+  if(!subj){toast('Enter subject','error');return}
+  try{
+    const r=await fetch(API+`/excel/subject/${sem}/${subj}`,{headers:{Authorization:'Bearer '+TOKEN}});
+    if(!r.ok){const d=await r.json();throw new Error(d.detail)}
+    const blob=await r.blob();
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download=`${subj}_Sem${sem}.xlsx`;a.click();URL.revokeObjectURL(a.href);
+    toast('Downloaded!');
+  }catch(e){toast(e.message,'error')}
+}
+
+// ── Face Registration ──
+async function registerFace(){
+  const roll=document.getElementById('fFaceRoll').value.trim();
+  const file=document.getElementById('fFaceFile').files[0];
+  if(!roll||!file){toast('Enter roll and select photo','error');return}
+  const fd=new FormData();fd.append('roll_no',roll);fd.append('file',file);
+  try{
+    const r=await fetch(API+'/face/register-image',{method:'POST',headers:{Authorization:'Bearer '+TOKEN},body:fd});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail);
+    document.getElementById('fFaceResult').innerHTML=`<div class="alert-box alert-green">${d.message}</div>`;
+    loadFacultyFace();
+  }catch(e){document.getElementById('fFaceResult').innerHTML=`<div class="alert-box alert-red">${e.message}</div>`}
+}
+
+async function buildEmbeddings(){
+  try{
+    document.getElementById('fBuildResult').innerHTML='<p style="color:var(--yellow)">Building... please wait</p>';
+    const r=await api('/face/build-embeddings',{method:'POST'});const d=await r.json();
+    if(!r.ok)throw new Error(d.detail);
+    // Reload the live AI model
+    try{await api('/live/reload-embeddings',{method:'POST'})}catch(e){}
+    document.getElementById('fBuildResult').innerHTML=`<div class="alert-box alert-green">${d.message}</div>`;
+  }catch(e){document.getElementById('fBuildResult').innerHTML=`<div class="alert-box alert-red">${e.message}</div>`}
+}
+
+async function loadFacultyFace(){
+  try{
+    const r=await api('/face/registered');const d=await r.json();
+    document.getElementById('fRegisteredList').innerHTML=d.students.length?
+      `<table><tr><th>Roll No</th><th>Photos</th></tr>
+      ${d.students.map(s=>`<tr><td>${s.roll_no}</td><td>${s.photos}</td></tr>`).join('')}</table>`:
+      '<p style="color:var(--text-muted)">No faces registered yet</p>';
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════
+// STUDENT FUNCTIONS
+// ══════════════════════════════════════════════════════════
+
+async function loadStudentDash(){
+  try{
+    const r=await api('/attendance/student/my-attendance');const d=await r.json();
+    if(!r.ok)throw new Error(d.detail);
+
+    // Greeting
+    document.getElementById('sDashGreeting').innerHTML=`Your Attendance 🎯`;
+    document.getElementById('sDashSub').textContent=`Semester ${d.semester||'—'} — AI & Machine Learning`;
+
+    // 4 Design A stat cards
+    document.getElementById('sDashStats').innerHTML=`
+      <div class="stat-card" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:var(--accent);opacity:.08"></div>
+        <div class="label">Overall</div>
+        <div class="value ${d.below_75?'red':'green'}" style="font-family:var(--font-display);font-size:32px;font-weight:800">${d.percentage}%</div>
+        <div style="font-size:11px;color:${d.below_75?'var(--red)':'var(--accent)'};margin-top:6px">${d.below_75?'↓ Below 75%':'↑ Above 75%'}</div>
+      </div>
+      <div class="stat-card" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:var(--blue);opacity:.08"></div>
+        <div class="label">Classes Attended</div>
+        <div class="value" style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--blue)">${d.present}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">of ${d.total_classes} total</div>
+      </div>
+      <div class="stat-card" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:var(--red);opacity:.08"></div>
+        <div class="label">Absent</div>
+        <div class="value red" style="font-family:var(--font-display);font-size:32px;font-weight:800">${d.absent}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">This semester</div>
+      </div>
+      <div class="stat-card" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:var(--yellow);opacity:.08"></div>
+        <div class="label">Subjects</div>
+        <div class="value yellow" style="font-family:var(--font-display);font-size:32px;font-weight:800">${d.subject_breakdown.length}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">${d.subject_breakdown.every(s=>!s.below_75)?'All above 75%':'Some below 75%'}</div>
+      </div>`;
+
+    if(d.below_75){
+      document.getElementById('sDashAlert').innerHTML=`<div class="alert-box alert-red" style="margin-bottom:16px">
+        ⚠️ <b>WARNING:</b> Your overall attendance is ${d.percentage}% — below the required 75%. Attend classes regularly!</div>`;
+    }else{document.getElementById('sDashAlert').innerHTML=''}
+
+    // Subject table with progress bars
+    document.getElementById('sDashSubjects').innerHTML=d.subject_breakdown.length?
+      `<table><tr><th>Subject</th><th>Total</th><th>Present</th><th>Absent</th><th>Percentage</th><th>Status</th></tr>
+      ${d.subject_breakdown.map(s=>`<tr><td style="color:var(--text-primary);font-weight:500">${s.subject}</td><td>${s.total}</td><td style="color:var(--accent)">${s.present}</td><td style="color:var(--red)">${s.absent}</td>
+        <td>${s.percentage}% <div style="height:4px;background:var(--border);border-radius:2px;width:60px;display:inline-block;vertical-align:middle;margin-left:4px;overflow:hidden"><div style="height:100%;width:${s.percentage}%;background:${s.below_75?'var(--red)':'var(--accent)'};border-radius:2px"></div></div></td>
+        <td>${s.below_75?'<span class="badge badge-a" style="border-radius:20px;padding:3px 10px">⚠️ Below 75%</span>':'<span class="badge badge-p" style="border-radius:20px;padding:3px 10px">Safe</span>'}</td></tr>`).join('')}</table>`:
+      '<p style="color:var(--text-muted)">No attendance records yet</p>';
+  }catch(e){toast(e.message,'error')}
+}
+
+async function loadStudentSubjects(){
+  try{
+    const r=await api('/attendance/student/my-attendance');const d=await r.json();
+    let html='';
+    d.subject_breakdown.forEach(s=>{
+      html+=`<div class="card" style="border-color:${s.below_75?'var(--red)':'var(--border)'}">
+        <h3><span class="card-icon ${s.below_75?'red':'teal'}" style="display:inline-flex;width:28px;height:28px;border-radius:7px;align-items:center;justify-content:center;font-size:13px;background:${s.below_75?'var(--red-dim)':'var(--accent-dim)'};color:${s.below_75?'var(--red)':'var(--accent)'};margin-right:6px">📚</span> ${s.subject}</h3>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:12px">
+          <div class="stat-card" style="position:relative;overflow:hidden">
+            <div style="position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:${s.below_75?'var(--red)':'var(--accent)'};opacity:.08"></div>
+            <div class="label">Attendance</div>
+            <div class="value ${s.below_75?'red':'green'}" style="font-family:var(--font-display);font-size:28px;font-weight:800">${s.percentage}%</div>
+          </div>
+          <div class="stat-card"><div class="label">Present</div><div class="value green" style="font-family:var(--font-display);font-size:28px;font-weight:800">${s.present}</div></div>
+          <div class="stat-card"><div class="label">Absent</div><div class="value red" style="font-family:var(--font-display);font-size:28px;font-weight:800">${s.absent}</div></div>
+          <div class="stat-card"><div class="label">Total</div><div class="value" style="font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--blue)">${s.total}</div></div>
+        </div>
+        ${s.below_75?'<div class="alert-box alert-red" style="margin-top:12px">⚠️ Below 75% — attend regularly!</div>':''}
+      </div>`;
+    });
+    document.getElementById('sSubjectCards').innerHTML=html||'<p style="color:var(--text-muted)">No data</p>';
+  }catch(e){toast(e.message,'error')}
+}
+
+async function loadStudentRecords(){
+  try{
+    const filter=document.getElementById('sRecFilter').value;
+    const url='/attendance/student/my-attendance'+(filter?`?subject=${filter}`:'');
+    const r=await api(url);const d=await r.json();
+
+    // Populate filter
+    const sel=document.getElementById('sRecFilter');
+    if(sel.options.length<=1){
+      d.subject_breakdown.forEach(s=>{const o=document.createElement('option');o.value=s.subject;o.textContent=s.subject;sel.appendChild(o)});
+    }
+
+    document.getElementById('sRecTable').innerHTML=d.records.length?
+      `<table><tr><th>Date</th><th>Subject</th><th>Status</th><th>Marked By</th></tr>
+      ${d.records.map(r=>`<tr><td style="color:var(--text-primary);font-weight:500">${r.day}</td><td>${r.subject}</td>
+        <td><span class="badge ${r.status==='P'?'badge-p':'badge-a'}" style="border-radius:20px;padding:3px 10px">${r.status==='P'?'Present':'Absent'}</span></td>
+        <td>${r.marked_by}</td></tr>`).join('')}</table>`:
+      '<p style="color:var(--text-muted)">No records</p>';
+  }catch(e){toast(e.message,'error')}
+}
+
+// Auto-reload on filter change
+document.addEventListener('change',e=>{if(e.target.id==='sRecFilter')loadStudentRecords()});
+
+// ══════════════════════════════════════════════════════════
+// HOD / PRINCIPAL FUNCTIONS
+// ══════════════════════════════════════════════════════════
+
+async function loadHODDash(){
+  try{
+    const [sr,lr,ar]=await Promise.all([
+      api('/students/list?semester=8'),api('/live/status'),api('/alerts')
+    ]);
+    const students=await sr.json();const live=await lr.json();const alerts=await ar.json();
+
+    // 4 Design A stat cards
+    document.getElementById('hDashStats').innerHTML=`
+      <div class="stat-card" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:var(--accent);opacity:.08"></div>
+        <div class="label">Total Students</div>
+        <div class="value green" style="font-family:var(--font-display);font-size:32px;font-weight:800">${students.length}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">All semesters</div>
+      </div>
+      <div class="stat-card" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:var(--blue);opacity:.08"></div>
+        <div class="label">Class Status</div>
+        <div class="value" style="font-family:var(--font-display);font-size:32px;font-weight:800;color:${live.is_active?'var(--accent)':'var(--red)'}">${live.is_active?'🟢 LIVE':'🔴 OFF'}</div>
+        <div style="font-size:11px;color:${live.is_active?'var(--accent)':'var(--text-muted)'};margin-top:6px">${live.is_active?'Taking attendance':'Idle'}</div>
+      </div>
+      <div class="stat-card" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:var(--red);opacity:.08"></div>
+        <div class="label">Recognized</div>
+        <div class="value red" style="font-family:var(--font-display);font-size:32px;font-weight:800">${live.recognized_count||0}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">${live.camera_streaming?'Camera active':'Camera off'}</div>
+      </div>
+      <div class="stat-card" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:var(--yellow);opacity:.08"></div>
+        <div class="label">Alerts</div>
+        <div class="value yellow" style="font-family:var(--font-display);font-size:32px;font-weight:800">${alerts.length}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">${alerts.length?'Needs review':'All clear'}</div>
+      </div>`;
+
+    // Faculty activity - try to load timetable
+    try{
+      const tr=await api('/timetable/');const slots=await tr.json();
+      const days=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+      const today=days[new Date().getDay()];
+      const todaySlots=slots.filter(s=>s.day===today);
+      if(todaySlots.length){
+        document.getElementById('hDashActivity').innerHTML=`<table><tr><th>Faculty</th><th>Subject</th><th>Scheduled</th><th>Room</th></tr>
+          ${todaySlots.map(s=>`<tr><td style="color:var(--text-primary);font-weight:500">${s.faculty}</td><td>${s.subject}</td><td>${s.start}-${s.end}</td><td>${s.room||'—'}</td></tr>`).join('')}</table>`;
+      }else{
+        document.getElementById('hDashActivity').innerHTML='<p style="color:var(--text-muted)">No classes scheduled today</p>';
+      }
+    }catch(e){document.getElementById('hDashActivity').innerHTML='<p style="color:var(--text-muted)">Could not load timetable</p>'}
+
+    // Alerts with colored left-border cards
+    document.getElementById('hDashAlerts').innerHTML=alerts.length?
+      `<div style="display:flex;flex-direction:column;gap:10px">${alerts.slice(0,5).map(a=>{
+        const isRed=a.type==='no_class'||a.type==='missed';
+        return `<div style="padding:12px;border-radius:var(--radius-sm);background:${isRed?'var(--red-dim)':'var(--yellow-dim)'};border-left:3px solid ${isRed?'var(--red)':'var(--yellow)'}">
+          <div style="font-size:12px;font-weight:600;color:${isRed?'var(--red)':'var(--yellow)'}">${a.type}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${a.message} — ${a.time||''}</div>
+        </div>`;
+      }).join('')}</div>`:
+      '<p style="color:var(--text-muted)">No alerts</p>';
+  }catch(e){console.error(e)}
+}
+
+// ── Live Monitor — Surveillance Mode ─────────────────────
+let survStream=null, survRunning=false;
+
+async function startSurveillance(){
+  try{
+    survStream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480}});
+    document.getElementById('survVideo').srcObject=survStream;
+    document.getElementById('survCamContainer').style.display='block';
+    document.getElementById('btnStartSurv').style.display='none';
+    document.getElementById('btnStopSurv').style.display='';
+    survRunning=true;
+    survFrameLoop();
+  }catch(e){toast('Camera error: '+e.message,'error')}
+}
+
+function stopSurveillance(){
+  survRunning=false;
+  if(survStream){survStream.getTracks().forEach(t=>t.stop());survStream=null}
+  document.getElementById('survCamContainer').style.display='none';
+  document.getElementById('btnStartSurv').style.display='';
+  document.getElementById('btnStopSurv').style.display='none';
+  document.getElementById('survDetections').innerHTML='';
+  document.getElementById('survInfo').innerHTML='';
+  const c=document.getElementById('survOverlay');
+  if(c)c.getContext('2d').clearRect(0,0,c.width,c.height);
+}
+
+async function survFrameLoop(){
+  const video=document.getElementById('survVideo');
+  const canvas=document.createElement('canvas');
+  canvas.width=640;canvas.height=480;
+  const ctx=canvas.getContext('2d');
+
+  while(survRunning&&survStream){
+    try{
+      ctx.drawImage(video,0,0,640,480);
+      const data=canvas.toDataURL('image/jpeg',0.5);
+      const fd=new FormData();fd.append('frame',data);
+      const r=await fetch(API+'/live/surveillance-frame',{method:'POST',headers:{Authorization:'Bearer '+TOKEN},body:fd});
+      if(r.ok){
+        const d=await r.json();
+        // Draw face boxes
+        if(d.faces&&d.faces.length>0){
+          drawSurvDetections(d.faces);
+          let html=`<p style="color:var(--text-secondary);font-size:13px">👁 ${d.person_count} person(s) detected</p>`;
+          d.faces.forEach(f=>{
+            html+=`<span class="badge ${f.known?'badge-p':'badge-a'}" style="margin:2px;padding:4px 8px">${f.known?f.name:'Unknown'} (${(f.score*100).toFixed(0)}%)</span> `;
+          });
+          document.getElementById('survDetections').innerHTML=html;
+        }else{
+          clearSurvOverlay();
+          document.getElementById('survDetections').innerHTML='<p style="color:var(--text-muted);font-size:13px">No faces detected</p>';
+        }
+        document.getElementById('survInfo').innerHTML=`<div class="alert-box alert-green" style="padding:6px 10px;font-size:12px">🔴 LIVE — ${d.person_count||0} person(s) in frame</div>`;
+      }
+      await new Promise(ok=>setTimeout(ok,300));
+    }catch(e){
+      console.error('[SURV]',e);
+      await new Promise(ok=>setTimeout(ok,1000));
+    }
+  }
+}
+
+function drawSurvDetections(faces){
+  const canvas=document.getElementById('survOverlay');
+  const video=document.getElementById('survVideo');
+  canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  faces.forEach(f=>{
+    const [x1,y1,x2,y2]=f.bbox;
+    const color=f.known?'var(--accent)':'var(--red)';
+    ctx.strokeStyle=color;ctx.lineWidth=3;
+    ctx.strokeRect(x1,y1,x2-x1,y2-y1);
+    const label=f.known?`${f.name} (${(f.score*100).toFixed(0)}%)`:'Unknown';
+    ctx.font='bold 14px Segoe UI';
+    const tw=ctx.measureText(label).width;
+    ctx.fillStyle=color;ctx.fillRect(x1,y1-24,tw+10,24);
+    ctx.fillStyle='#fff';ctx.fillText(label,x1+5,y1-7);
+  });
+}
+
+function clearSurvOverlay(){
+  const c=document.getElementById('survOverlay');
+  if(c)c.getContext('2d').clearRect(0,0,c.width,c.height);
+}
+
+function loadHODLive(){
+  // Poll class status every 3 seconds
+  setInterval(async()=>{
+    try{
+      const r=await api('/live/status');const d=await r.json();
+      let html='';
+      if(d.is_active){
+        html=`<div class="alert-box alert-green" style="padding:8px 12px">
+          <b>🟢 Class Active</b> — Faculty: ${d.faculty_name||'—'} | Subject: ${d.subject||'—'} | Semester: ${d.semester||'—'}
+        </div>`;
+      }else{
+        html=`<div class="alert-box alert-yellow" style="padding:8px 12px">🔴 No active class right now</div>`;
+      }
+      document.getElementById('liveStatus').innerHTML=html;
+    }catch(e){}
+  },3000);
+}
+
+// ── Faculty Management (HOD) ─────────────────────────────
+async function loadHODFaculty(){
+  try{
+    const r=await api('/students/faculty/list');const d=await r.json();
+    if(!d.length){document.getElementById('hFacultyTable').innerHTML='<p style="color:var(--text-muted)">No faculty added yet</p>';return}
+    let html='<table><tr><th>#</th><th>Username</th><th>Email</th><th>Action</th></tr>';
+    d.forEach((f,i)=>{
+      html+=`<tr><td>${i+1}</td><td><b>${f.username}</b></td><td>${f.email||'—'}</td>
+        <td><button class="btn btn-primary" style="padding:3px 8px;font-size:12px;margin-right:4px" onclick="editFaculty('${f.username}')">✏️</button><button class="btn btn-danger" style="padding:3px 8px;font-size:12px" onclick="deleteFaculty('${f.username}')">🗑</button></td></tr>`;
+    });
+    html+='</table>';
+    document.getElementById('hFacultyTable').innerHTML=html;
+  }catch(e){document.getElementById('hFacultyTable').innerHTML='<p style="color:var(--red)">Error loading</p>'}
+}
+
+async function addFaculty(){
+  const user=document.getElementById('hFacUser').value.trim();
+  const pass=document.getElementById('hFacPass').value.trim();
+  const email=document.getElementById('hFacEmail').value.trim();
+  if(!user||!pass){toast('Enter username and password','error');return}
+  try{
+    const r=await api('/students/faculty/add',{method:'POST',body:JSON.stringify({username:user,password:pass,email:email||null})});
+    if(!r.ok){const d=await r.json();throw new Error(d.detail)}
+    toast(`✅ Faculty '${user}' created!`);
+    document.getElementById('hFacUser').value='';
+    document.getElementById('hFacPass').value='';
+    document.getElementById('hFacEmail').value='';
+    loadHODFaculty();
+  }catch(e){toast(e.message,'error')}
+}
+
+async function deleteFaculty(username){
+  if(!confirm(`Delete faculty '${username}'?`))return;
+  try{
+    const r=await api(`/students/faculty/delete/${username}`,{method:'DELETE'});
+    if(!r.ok){const d=await r.json();throw new Error(d.detail)}
+    toast(`Faculty '${username}' deleted`);loadHODFaculty();
+  }catch(e){toast(e.message,'error')}
+}
+
+async function loadHODAlerts(){
+  try{
+    const r=await api('/alerts');const d=await r.json();
+    document.getElementById('hAlertList').innerHTML=d.length?
+      d.map(a=>`<div class="alert-box ${a.type==='no_class'?'alert-red':'alert-yellow'}" style="margin-bottom:8px">
+        <b>${a.type.toUpperCase()}</b>: ${a.message}<br><small>${a.time}</small></div>`).join(''):
+      '<p style="color:var(--text-muted)">No alerts yet</p>';
+  }catch(e){}
+}
+
+async function loadHODStudents(){
+  const sem=document.getElementById('hListSem')?.value||8;
+  try{
+    const r=await api(`/students/list?semester=${sem}`);const d=await r.json();
+    document.getElementById('hStudentTable').innerHTML=d.length?
+      `<table><tr><th>Roll No</th><th>Name</th><th>Email</th><th>Phone</th><th>Action</th></tr>
+      ${d.map(s=>`<tr><td>${s.roll_no}</td><td>${s.name}</td><td>${s.email||'—'}</td><td>${s.phone||'—'}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.roll_no}','h')">🗑</button></td></tr>`).join('')}</table>`:
+      '<p style="color:var(--text-muted)">No students</p>';
+  }catch(e){toast(e.message,'error')}
+}
+
+async function addStudentH(){
+  const roll=document.getElementById('hAddRoll').value.trim();
+  const name=document.getElementById('hAddName').value.trim();
+  if(!roll||!name){toast('Roll No and Name are required','error');return}
+  try{
+    const r=await api('/students/add',{method:'POST',body:JSON.stringify({
+      roll_no:roll,name:name,
+      semester:parseInt(document.getElementById('hAddSem').value),dept:document.getElementById('hAddDept').value.trim(),
+      email:document.getElementById('hAddEmail').value.trim(),phone:document.getElementById('hAddPhone').value.trim(),
+    })});const d=await r.json();if(!r.ok)throw new Error(d.detail);
+    toast('Student added! Opening camera for face capture...');loadHODStudents();
+    openFaceCaptureModal(roll,name);
+  }catch(e){toast(e.message,'error')}
+}
+
+async function loadHODTimetable(){
+  // Populate faculty dropdown
+  try{
+    const fr=await api('/students/faculty/list');const fl=await fr.json();
+    const sel=document.getElementById('hTTFaculty');
+    sel.innerHTML='<option value="">— Select Faculty —</option>';
+    fl.forEach(f=>{sel.innerHTML+=`<option value="${f.username}">${f.username}</option>`});
+  }catch(e){}
+  try{
+    const r=await api('/timetable/');const d=await r.json();
+    document.getElementById('hTTTable').innerHTML=d.length?
+      `<table><tr><th>Day</th><th>Time</th><th>Subject</th><th>Faculty</th><th>Sem</th><th>Room</th><th>Action</th></tr>
+      ${d.map(s=>`<tr><td>${s.day}</td><td>${s.start}-${s.end}</td><td>${s.subject}</td><td>${s.faculty||'—'}</td>
+        <td>${s.semester}</td><td>${s.room||'—'}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteSlot(${s.id},'h')">🗑</button></td></tr>`).join('')}</table>`:
+      '<p style="color:var(--text-muted)">No slots</p>';
+  }catch(e){toast(e.message,'error')}
+}
+
+async function addSlotH(){
+  try{
+    const r=await api('/timetable/add',{method:'POST',body:JSON.stringify({
+      day_name:document.getElementById('hTTDay').value,start_time:document.getElementById('hTTStart').value,
+      end_time:document.getElementById('hTTEnd').value,subject:document.getElementById('hTTSubject').value,
+      faculty_username:document.getElementById('hTTFaculty').value,
+      semester:parseInt(document.getElementById('hTTSem').value),room:document.getElementById('hTTRoom').value,
+    })});if(!r.ok)throw new Error((await r.json()).detail);
+    toast('Slot added');loadHODTimetable();
+  }catch(e){toast(e.message,'error')}
+}
+
+async function loadHODAverages(){
+  const sem=document.getElementById('hAttSem').value;
+  const subj=document.getElementById('hAttSubj').value;
+  if(!subj){toast('Enter subject','error');return}
+  try{
+    const r=await api(`/attendance/averages?semester=${sem}&subject=${subj}`);const d=await r.json();
+    document.getElementById('hAttTable').innerHTML=`
+      <div class="alert-box alert-green" style="margin-bottom:12px">Overall: <b>${d.overall_average}%</b></div>
+      <table><tr><th>Roll No</th><th>Name</th><th>Total</th><th>Present</th><th>Absent</th><th>%</th></tr>
+      ${d.students.map(s=>`<tr><td>${s.roll_no}</td><td>${s.name}</td><td>${s.total}</td><td>${s.present}</td><td>${s.absent}</td>
+        <td><span class="badge ${s.below_75?'badge-a':'badge-p'}">${s.percentage}%</span></td></tr>`).join('')}</table>`;
+  }catch(e){toast(e.message,'error')}
+}
+function loadHODAttendance(){}
+
+// ── HOD Reports (Register Grid) ──────────────────────────
+let hodRegData=null, hodBelow75=false;
+
+async function loadHODReports(){
+  try{
+    const r=await api('/attendance/all-subjects');const d=await r.json();
+    const ss=document.getElementById('hRepSem'),su=document.getElementById('hRepSubj'),sf=document.getElementById('hRepFac');
+    ss.innerHTML='<option value="">All</option>';su.innerHTML='<option value="">— Select —</option>';sf.innerHTML='<option value="">All</option>';
+    d.semesters.forEach(s=>{ss.innerHTML+=`<option value="${s}">Sem ${s}</option>`});
+    d.subjects.forEach(s=>{su.innerHTML+=`<option value="${s}">${s}</option>`});
+    d.faculties.forEach(f=>{sf.innerHTML+=`<option value="${f}">${f}</option>`});
+  }catch(e){}
+}
+
+async function loadHODRegisterGrid(){
+  const sem=document.getElementById('hRepSem').value;
+  const subj=document.getElementById('hRepSubj').value;
+  if(!subj){toast('Select a subject','error');return}
+  try{
+    const r=await api(`/attendance/register?semester=${sem||8}&subject=${subj}`);
+    hodRegData=await r.json();
+    renderHODRegister();
+  }catch(e){toast(e.message,'error')}
+}
+
+function renderHODRegister(){
+  if(!hodRegData){document.getElementById('hRegTable').innerHTML='<p style="color:var(--text-muted)">Load register first</p>';return}
+  const d=hodRegData;
+  let students=d.students;
+  if(hodBelow75) students=students.filter(s=>s.below_75);
+  if(!d.dates.length){document.getElementById('hRegTable').innerHTML='<p style="color:var(--text-muted)">No records</p>';return}
+
+  let html='<table style="font-size:12px"><tr><th>Roll No</th><th>Name</th>';
+  d.dates.forEach(dt=>{const short=dt.slice(5);const isH=d.holidays&&d.holidays[dt];if(isH){html+=`<th style="writing-mode:vertical-lr;padding:4px;font-size:10px;background:var(--yellow-dim);color:var(--yellow);cursor:pointer" title="${d.holidays[dt]}" onclick="unmarkHoliday('${dt}')">H</th>`}else{html+=`<th style="writing-mode:vertical-lr;padding:4px;font-size:10px;cursor:pointer" title="Click to delete" onclick="deleteDate('${dt}')">${short}</th>`}});
+  html+='<th>Total</th><th>P</th><th>A</th><th>%</th></tr>';
+  students.forEach(s=>{
+    const rc=s.below_75?'style="background:#ff6b6b08"':'';
+    html+=`<tr ${rc}><td><b>${s.roll_no}</b></td><td>${s.name}</td>`;
+    d.dates.forEach(dt=>{
+      const isH=d.holidays&&d.holidays[dt];
+      if(isH){html+=`<td style="text-align:center;background:var(--yellow-dim);padding:2px"><span style="font-size:10px;color:var(--yellow)">H</span></td>`}
+      else{const st=s.attendance[dt]||'-';const cls=st==='P'?'badge-p':st==='A'?'badge-a':'';const click=`onclick="overrideAtt('${s.roll_no}','${dt}','${d.subject}')"`;html+=`<td style="text-align:center;cursor:pointer;padding:2px" ${click}><span class="badge ${cls}" style="font-size:10px">${st}</span></td>`}
+    });
+    html+=`<td>${s.total}</td><td style="color:var(--accent)">${s.present}</td><td style="color:var(--red)">${s.absent}</td>`;
+    const pctColor=s.below_75?(s.percentage<60?'var(--red)':'var(--yellow)'):'var(--accent)';
+    html+=`<td><b style="color:${s.below_75?'var(--red)':'var(--accent)'}">${s.percentage}%</b> <div style="height:4px;background:var(--border);border-radius:2px;width:50px;display:inline-block;vertical-align:middle;margin-left:4px;overflow:hidden"><div style="height:100%;width:${s.percentage}%;background:${pctColor};border-radius:2px"></div></div></td></tr>`;
+  });
+  html+='</table>';
+  document.getElementById('hRegTable').innerHTML=html;
+}
+
+async function overrideAtt(roll,day,subject){
+  const current=hodRegData.students.find(s=>s.roll_no===roll)?.attendance[day];
+  const newStatus=current==='P'?'A':'P';
+  try{
+    const r=await api('/attendance/override',{method:'POST',body:JSON.stringify({roll_no:roll,subject:subject,day:day,status:newStatus})});
+    if(!r.ok){const d=await r.json();throw new Error(d.detail)}
+    toast(`${roll}: ${current} → ${newStatus}`);
+    loadHODRegisterGrid();
+  }catch(e){toast(e.message,'error')}
+}
+
+function toggleHODBelow75(){
+  hodBelow75=!hodBelow75;
+  document.getElementById('hBtnBelow75').textContent=hodBelow75?'👥 Show All':'⚠️ Show Below 75%';
+  renderHODRegister();
+}
+
+async function downloadHODRegExcel(){
+  const sem=document.getElementById('hRepSem').value||8;
+  const subj=document.getElementById('hRepSubj').value;
+  if(!subj){toast('Select subject first','error');return}
+  try{
+    const r=await fetch(API+`/excel/subject/${sem}/${subj}`,{headers:{Authorization:'Bearer '+TOKEN}});
+    if(!r.ok)throw new Error('Failed');
+    const blob=await r.blob();const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download=`${subj}_Sem${sem}.xlsx`;a.click();
+    toast('Excel downloaded!');
+  }catch(e){toast(e.message,'error')}
+}
+
+async function downloadHODRegCSV(){
+  const sem=document.getElementById('hRepSem').value||8;
+  const subj=document.getElementById('hRepSubj').value;
+  if(!subj){toast('Select subject first','error');return}
+  try{
+    const r=await fetch(API+`/attendance/register/csv?semester=${sem}&subject=${subj}`,{headers:{Authorization:'Bearer '+TOKEN}});
+    if(!r.ok)throw new Error('Failed');
+    const blob=await r.blob();const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download=`${subj}_Sem${sem}_Register.csv`;a.click();
+    toast('CSV downloaded!');
+  }catch(e){toast(e.message,'error')}
+}
+
+// ── Faculty Activity Log ─────────────────────────────────
+async function loadHODFacultyLog(){
+  try{
+    const r=await api('/attendance/all-subjects');const d=await r.json();
+    const sel=document.getElementById('hLogFac');
+    sel.innerHTML='<option value="">All</option>';
+    d.faculties.forEach(f=>{sel.innerHTML+=`<option value="${f}">${f}</option>`});
+    // Set default dates
+    const today=new Date().toISOString().slice(0,10);
+    const week=new Date(Date.now()-7*86400000).toISOString().slice(0,10);
+    document.getElementById('hLogFrom').value=week;
+    document.getElementById('hLogTo').value=today;
+  }catch(e){}
+  loadFacultyLogData();
+}
+
+async function loadFacultyLogData(){
+  const fac=document.getElementById('hLogFac').value;
+  const from=document.getElementById('hLogFrom').value;
+  const to=document.getElementById('hLogTo').value;
+  let url='/attendance/faculty-log?';
+  if(fac)url+=`faculty=${fac}&`;
+  if(from)url+=`from_date=${from}&`;
+  if(to)url+=`to_date=${to}&`;
+  try{
+    const r=await api(url);const logs=await r.json();
+    if(!logs.length){document.getElementById('hLogTable').innerHTML='<p style="color:var(--text-muted)">No activity logs</p>';return}
+    let html='<table><tr><th>Date</th><th>Faculty</th><th>Subject</th><th>Sem</th><th>Scheduled</th><th>Actual</th><th>Duration</th><th>P/T</th><th>Mode</th><th>Status</th><th>Action</th></tr>';
+    logs.forEach(l=>{
+      const stColor=l.status==='completed'?'badge-p':l.status==='missed'?'badge-a':'badge-warn';
+      html+=`<tr><td>${l.day}</td><td><b>${l.faculty}</b></td><td>${l.subject}</td><td>${l.semester}</td>
+        <td>${l.scheduled_start||'—'}-${l.scheduled_end||'—'}</td>
+        <td>${l.actual_start||'—'}-${l.actual_end||'—'}</td>
+        <td>${l.duration} min</td><td>${l.present}/${l.total}</td>
+        <td>${l.mode}</td>
+        <td><span class="badge ${stColor}">${l.status}</span></td>
+        <td><select onchange="updateFacultyLog(${l.id},this.value)" style="background:var(--bg-deep);color:var(--text-primary);border:1px solid var(--border-light);border-radius:4px;padding:2px 4px;font-size:11px">
+          <option value="completed" ${l.status==='completed'?'selected':''}>✅ Completed</option>
+          <option value="missed" ${l.status==='missed'?'selected':''}>❌ Missed</option>
+          <option value="on_leave" ${l.status==='on_leave'?'selected':''}>🏖 On Leave</option>
+          <option value="other_duty" ${l.status==='other_duty'?'selected':''}>📋 Other Duty</option>
+          <option value="cancelled" ${l.status==='cancelled'?'selected':''}>🚫 Cancelled</option>
+        </select></td></tr>`;
+    });
+    html+='</table>';
+    document.getElementById('hLogTable').innerHTML=html;
+  }catch(e){toast(e.message,'error')}
+}
+
+async function updateFacultyLog(id,status){
+  const remark=prompt('Add remark (optional):');
+  try{
+    const r=await api(`/attendance/faculty-log/${id}`,{method:'PUT',body:JSON.stringify({status:status,remark:remark||null})});
+    if(!r.ok)throw new Error('Failed');
+    toast('Log updated');
+  }catch(e){toast(e.message,'error')}
+}
+
+// ── Below 75% Dashboard ──────────────────────────────────
+async function loadHODBelow75(){
+  try{
+    const r=await api('/attendance/all-subjects');const d=await r.json();
+    const ss=document.getElementById('hB75Sem'),su=document.getElementById('hB75Subj');
+    ss.innerHTML='<option value="">All</option>';su.innerHTML='<option value="">All</option>';
+    d.semesters.forEach(s=>{ss.innerHTML+=`<option value="${s}">Sem ${s}</option>`});
+    d.subjects.forEach(s=>{su.innerHTML+=`<option value="${s}">${s}</option>`});
+  }catch(e){}
+  loadBelow75Data();
+}
+
+async function loadBelow75Data(){
+  const sem=document.getElementById('hB75Sem').value;
+  const subj=document.getElementById('hB75Subj').value;
+  let url='/attendance/below-75?';
+  if(sem)url+=`semester=${sem}&`;
+  if(subj)url+=`subject=${subj}&`;
+  try{
+    const r=await api(url);const d=await r.json();
+    document.getElementById('hB75Stats').innerHTML=`
+      <div class="stats-row">
+        <div class="stat-card"><div class="label">At-Risk Students</div><div class="value red">${d.count}</div></div>
+      </div>`;
+    if(!d.students.length){document.getElementById('hB75Table').innerHTML='<p style="color:var(--accent)">✅ All students above 75%!</p>';return}
+    let html='<table><tr><th>Roll No</th><th>Name</th><th>Sem</th><th>Email</th><th>Overall %</th><th>Subjects</th></tr>';
+    d.students.forEach(s=>{
+      const subjHtml=s.subjects.map(sub=>`<span class="badge ${sub.percentage<75?'badge-a':'badge-p'}" style="margin:1px">${sub.subject}: ${sub.percentage}%</span>`).join(' ');
+      html+=`<tr><td><b>${s.roll_no}</b></td><td>${s.name}</td><td>${s.semester}</td><td>${s.email||'—'}</td>
+        <td><b style="color:var(--red)">${s.percentage}%</b></td><td>${subjHtml}</td></tr>`;
+    });
+    html+='</table>';
+    document.getElementById('hB75Table').innerHTML=html;
+  }catch(e){toast(e.message,'error')}
+}
+
+// ── Daily Class Summary ──────────────────────────────────
+async function loadHODDaily(){
+  document.getElementById('hDailyDate').value=new Date().toISOString().slice(0,10);
+  loadDailyData();
+}
+
+async function loadDailyData(){
+  const day=document.getElementById('hDailyDate').value;
+  try{
+    const r=await api(`/attendance/daily-summary?day=${day}`);const d=await r.json();
+    document.getElementById('hDailyStats').innerHTML=`
+      <div class="stats-row">
+        <div class="stat-card"><div class="label">Date</div><div class="value" style="font-size:18px">${d.date} (${d.day})</div></div>
+        <div class="stat-card"><div class="label">Scheduled</div><div class="value">${d.total_scheduled}</div></div>
+        <div class="stat-card"><div class="label">Held</div><div class="value green">${d.classes_held}</div></div>
+        <div class="stat-card"><div class="label">Missed</div><div class="value red">${d.classes_missed}</div></div>
+      </div>`;
+    if(!d.classes.length){document.getElementById('hDailyTable').innerHTML='<p style="color:var(--text-muted)">No classes scheduled</p>';return}
+    let html='<table><tr><th>Subject</th><th>Faculty</th><th>Sem</th><th>Time</th><th>Status</th><th>Present/Total</th><th>Remark</th></tr>';
+    d.classes.forEach(c=>{
+      const stColor=c.held?'badge-p':c.status==='on_leave'?'badge-warn':'badge-a';
+      html+=`<tr><td><b>${c.subject}</b></td><td>${c.faculty}</td><td>${c.semester}</td><td>${c.scheduled}</td>
+        <td><span class="badge ${stColor}">${c.status}</span></td>
+        <td>${c.present}/${c.total}</td><td>${c.remark||'—'}</td></tr>`;
+    });
+    html+='</table>';
+    document.getElementById('hDailyTable').innerHTML=html;
+  }catch(e){toast(e.message,'error')}
+}
+
+// ── Edit Faculty ─────────────────────────────────────────
+async function editFaculty(username){
+  const email=prompt('New email (blank to keep):');
+  const pass=prompt('New password (blank to keep):');
+  if(email===null)return;
+  try{
+    const body={};
+    if(email)body.email=email;
+    if(pass)body.password=pass;
+    const r=await api(`/students/faculty/edit/${username}`,{method:'PUT',body:JSON.stringify(body)});
+    if(!r.ok){const d=await r.json();throw new Error(d.detail)}
+    toast('Faculty updated!');loadHODFaculty();
+  }catch(e){toast(e.message,'error')}
+}
+
+async function downloadExcelH(){
+  const sem=document.getElementById('hExSem').value;
+  const subj=document.getElementById('hExSubj').value;
+  if(!subj){toast('Enter subject','error');return}
+  try{
+    const r=await fetch(API+`/excel/subject/${sem}/${subj}`,{headers:{Authorization:'Bearer '+TOKEN}});
+    if(!r.ok){const d=await r.json();throw new Error(d.detail)}
+    const blob=await r.blob();
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download=`${subj}_Sem${sem}.xlsx`;a.click();URL.revokeObjectURL(a.href);
+    toast('Downloaded!');
+  }catch(e){toast(e.message,'error')}
+}
+async function downloadZipH(){
+  const sem=document.getElementById('hExSem').value;
+  try{
+    const r=await fetch(API+`/excel/semester/${sem}`,{headers:{Authorization:'Bearer '+TOKEN}});
+    if(!r.ok){const d=await r.json();throw new Error(d.detail)}
+    const blob=await r.blob();
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download=`SEM_${sem}_EXCELS.zip`;a.click();URL.revokeObjectURL(a.href);
+    toast('Downloaded!');
+  }catch(e){toast(e.message,'error')}
+}
+function loadHODExcel(){}
+
+async function registerFaceH(){
+  const roll=document.getElementById('hFaceRoll').value.trim();
+  const file=document.getElementById('hFaceFile').files[0];
+  if(!roll||!file){toast('Enter roll and select photo','error');return}
+  const fd=new FormData();fd.append('roll_no',roll);fd.append('file',file);
+  try{
+    const r=await fetch(API+'/face/register-image',{method:'POST',headers:{Authorization:'Bearer '+TOKEN},body:fd});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail);
+    document.getElementById('hFaceResult').innerHTML=`<div class="alert-box alert-green">${d.message}</div>`;loadHODFace();
+  }catch(e){document.getElementById('hFaceResult').innerHTML=`<div class="alert-box alert-red">${e.message}</div>`}
+}
+
+async function buildEmbeddingsH(){
+  try{
+    document.getElementById('hBuildResult').innerHTML='<p style="color:var(--yellow)">Building...</p>';
+    const r=await api('/face/build-embeddings',{method:'POST'});const d=await r.json();
+    if(!r.ok)throw new Error(d.detail);
+    try{await api('/live/reload-embeddings',{method:'POST'})}catch(e){}
+    document.getElementById('hBuildResult').innerHTML=`<div class="alert-box alert-green">${d.message}</div>`;
+  }catch(e){document.getElementById('hBuildResult').innerHTML=`<div class="alert-box alert-red">${e.message}</div>`}
+}
+
+async function loadHODFace(){
+  try{
+    const r=await api('/face/registered');const d=await r.json();
+    document.getElementById('hRegisteredList').innerHTML=d.students.length?
+      `<table><tr><th>Roll No</th><th>Photos</th></tr>
+      ${d.students.map(s=>`<tr><td>${s.roll_no}</td><td>${s.photos}</td></tr>`).join('')}</table>`:
+      '<p style="color:var(--text-muted)">No faces registered</p>';
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════
+// FACE CAPTURE MODAL — Webcam capture + auto train
+// ══════════════════════════════════════════════════════════
+let capStream=null, capRunning=false, capRoll='', capCaptured=0, capSkipped=0;
+const CAP_TARGET=60, CAP_INTERVAL_MS=300;
+
+function openFaceCaptureModal(roll,name){
+  capRoll=roll; capCaptured=0; capSkipped=0; capRunning=false;
+  document.getElementById('capRollLabel').textContent=roll;
+  document.getElementById('capNameLabel').textContent=name;
+  document.getElementById('capCaptured').textContent='0';
+  document.getElementById('capTarget').textContent=CAP_TARGET;
+  document.getElementById('capSkipped').textContent='0';
+  document.getElementById('capProgress').style.width='0%';
+  document.getElementById('capMsg').className='capture-msg alert-yellow';
+  document.getElementById('capMsg').textContent='Position student\'s face in the camera and press Start';
+  document.getElementById('capStartBtn').style.display='';
+  document.getElementById('capStartBtn').disabled=false;
+  document.getElementById('capStopBtn').style.display='none';
+  document.getElementById('capSkipBtn').textContent='✖ Skip / Close';
+  document.getElementById('faceCaptureModal').classList.add('active');
+  // Start webcam preview immediately
+  startCapPreview();
+}
+
+async function startCapPreview(){
+  try{
+    capStream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480}});
+    document.getElementById('capVideo').srcObject=capStream;
+  }catch(e){
+    document.getElementById('capMsg').className='capture-msg alert-red';
+    document.getElementById('capMsg').textContent='Camera access denied. Please allow camera permission.';
+  }
+}
+
+async function startFaceCapture(){
+  if(!capStream){toast('Camera not available','error');return}
+  capRunning=true; capCaptured=0; capSkipped=0;
+  document.getElementById('capStartBtn').style.display='none';
+  document.getElementById('capStopBtn').style.display='';
+  document.getElementById('capMsg').className='capture-msg alert-green';
+  document.getElementById('capMsg').textContent='Capturing... Look at the camera. Move face slightly for variety.';
+  captureFaceLoop();
+}
+
+async function captureFaceLoop(){
+  if(!capRunning||capCaptured>=CAP_TARGET){
+    finishFaceCapture();
+    return;
+  }
+  const video=document.getElementById('capVideo');
+  const canvas=document.getElementById('capCanvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=video.videoWidth||640;
+  canvas.height=video.videoHeight||480;
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  const dataUrl=canvas.toDataURL('image/jpeg',0.85);
+
+  try{
+    const fd=new FormData();
+    fd.append('roll_no',capRoll);
+    fd.append('frame',dataUrl);
+    const r=await fetch(API+'/face/register-frame',{method:'POST',headers:{Authorization:'Bearer '+TOKEN},body:fd});
+    const d=await r.json();
+    if(d.skipped){
+      capSkipped++;
+      document.getElementById('capSkipped').textContent=capSkipped;
+      // Draw red border on canvas to show no face / multiple faces
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.strokeStyle='#ff6b6b'; ctx.lineWidth=4;
+      ctx.strokeRect(2,2,canvas.width-4,canvas.height-4);
+    }else{
+      capCaptured++;
+      document.getElementById('capCaptured').textContent=capCaptured;
+      document.getElementById('capProgress').style.width=((capCaptured/CAP_TARGET)*100)+'%';
+      // Draw green border to show successful capture
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.strokeStyle='#06d6a0'; ctx.lineWidth=4;
+      ctx.strokeRect(2,2,canvas.width-4,canvas.height-4);
+    }
+  }catch(e){
+    capSkipped++;
+    document.getElementById('capSkipped').textContent=capSkipped;
+  }
+  if(capRunning&&capCaptured<CAP_TARGET){
+    setTimeout(captureFaceLoop,CAP_INTERVAL_MS);
+  }else{
+    finishFaceCapture();
+  }
+}
+
+function stopFaceCapture(){
+  capRunning=false;
+}
+
+async function finishFaceCapture(){
+  capRunning=false;
+  document.getElementById('capStopBtn').style.display='none';
+  document.getElementById('capStartBtn').style.display='none';
+  if(capCaptured===0){
+    document.getElementById('capMsg').className='capture-msg alert-red';
+    document.getElementById('capMsg').textContent='No faces captured. You can register face later from Face Recognition page.';
+    document.getElementById('capSkipBtn').textContent='✖ Close';
+    return;
+  }
+  // Auto build embeddings
+  document.getElementById('capMsg').className='capture-msg alert-yellow';
+  document.getElementById('capMsg').textContent=`Captured ${capCaptured} photos! Building AI model... please wait`;
+  try{
+    const r=await api(`/face/build-single/${capRoll}`,{method:'POST'});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.detail);
+    // Reload the live attendance AI model so it picks up new faces
+    try{await api('/live/reload-embeddings',{method:'POST'})}catch(e){console.log('reload-emb:',e)}
+    document.getElementById('capMsg').className='capture-msg alert-green';
+    document.getElementById('capMsg').textContent=`✅ Done! ${capCaptured} photos captured & model trained. ${d.message}`;
+  }catch(e){
+    document.getElementById('capMsg').className='capture-msg alert-yellow';
+    document.getElementById('capMsg').textContent=`${capCaptured} photos captured. Model build failed: ${e.message}. Build embeddings manually.`;
+  }
+  document.getElementById('capSkipBtn').textContent='✔ Done — Close';
+  // Refresh face lists if visible
+  try{loadFacultyFace()}catch(e){}
+  try{loadHODFace()}catch(e){}
+}
+
+function closeFaceCaptureModal(){
+  capRunning=false;
+  if(capStream){capStream.getTracks().forEach(t=>t.stop());capStream=null}
+  document.getElementById('capVideo').srcObject=null;
+  const c=document.getElementById('capCanvas');c.getContext('2d').clearRect(0,0,c.width,c.height);
+  document.getElementById('faceCaptureModal').classList.remove('active');
+}
+
+// Open capture modal from Face Registration page (for existing students)
+async function captureFaceFromPage(inputId){
+  const roll=document.getElementById(inputId).value.trim();
+  if(!roll){toast('Enter a Roll Number first','error');return}
+  // Verify student exists
+  try{
+    const r=await api('/students/?semester=0');
+    // Try to find name - if we can't, just use the roll
+    let name=roll;
+    try{
+      for(let sem=1;sem<=10;sem++){
+        const sr=await api(`/students/?semester=${sem}`);
+        if(sr.ok){const sd=await sr.json();const found=sd.find(s=>s.roll_no===roll);if(found){name=found.name;break;}}
+      }
+    }catch(e){}
+    openFaceCaptureModal(roll,name);
+  }catch(e){
+    openFaceCaptureModal(roll,roll);
+  }
+}
+
+// ═══ Register Edit Functions ═══
+function showManualDate(){
+  const dt=prompt('Enter date (YYYY-MM-DD):');
+  if(!dt)return;
+  const sem=document.getElementById('fRegSem').value;
+  const subj=document.getElementById('fRegSubj').value;
+  if(!subj){toast('Load register first','error');return}
+  api(`/students/list?semester=${sem}`).then(r=>r.json()).then(async students=>{
+    const att={};
+    students.forEach(s=>{att[s.roll_no]='P'});
+    const r=await api('/attendance/manual-date',{method:'POST',body:JSON.stringify({
+      semester:parseInt(sem),subject:subj,day:dt,attendance:att
+    })});
+    if(r.ok){toast('Manual date added! Toggle P/A as needed.');loadRegisterGrid()}
+    else{const d=await r.json();toast(d.detail||'Failed','error')}
+  });
+}
+async function deleteDate(dt){
+  const reason=prompt(`Delete attendance for ${dt}?\n\nReason (Holiday/Event/Mourning/Other):`);
+  if(!reason)return;
+  const sem=document.getElementById('fRegSem').value;
+  const subj=document.getElementById('fRegSubj').value;
+  const r=await api('/attendance/delete-date',{method:'POST',body:JSON.stringify({
+    semester:parseInt(sem),subject:subj,day:dt,reason:reason
+  })});
+  if(r.ok){toast('Date deleted');loadRegisterGrid()}
+  else{const d=await r.json();toast(d.detail||'Failed','error')}
+}
+function showDeleteDate(){
+  if(!registerData||!registerData.dates.length){toast('Load register first','error');return}
+  const dt=prompt('Date to delete (YYYY-MM-DD):\n\nDates: '+registerData.dates.join(', '));
+  if(dt)deleteDate(dt);
+}
+async function showMarkHoliday(){
+  const dt=prompt('Enter holiday date (YYYY-MM-DD):');
+  if(!dt)return;
+  const reason=prompt('Reason (Holiday / Event / Mourning / Other):');
+  if(!reason)return;
+  const subj=document.getElementById('fRegSubj')?.value||null;
+  const sem=document.getElementById('fRegSem')?.value||null;
+  const r=await api('/attendance/mark-holiday',{method:'POST',body:JSON.stringify({
+    day:dt,reason:reason,subject:subj||null,semester:sem?parseInt(sem):null
+  })});
+  if(r.ok){toast('Holiday marked!');loadRegisterGrid()}
+  else{const d=await r.json();toast(d.detail||'Failed','error')}
+}
+async function unmarkHoliday(dt){
+  if(!confirm(`Remove holiday for ${dt}?`))return;
+  const subj=document.getElementById('fRegSubj')?.value||'';
+  const r=await api(`/attendance/unmark-holiday?day=${dt}&subject=${subj}`,{method:'DELETE'});
+  if(r.ok){toast('Holiday unmarked');loadRegisterGrid()}
+  else{toast('Failed','error')}
+}
+
+// ══════════════════════════════════════════════════════════
+// ACADEMIC PLANNER FUNCTIONS
+// ══════════════════════════════════════════════════════════
+
+// ── Calendar ──
+async function loadCalendar(){
+  try{
+    const r=await api('/planner/calendar');
+    if(!r||!r.ok)return;
+    const data=await r.json();
+    const el=document.getElementById('calList');
+    if(!data.length){el.innerHTML='<p style="color:var(--text-muted);font-size:13px">No calendars set yet</p>';return}
+    const canEdit=ROLE==='faculty'||ROLE==='hod'||ROLE==='admin';
+    el.innerHTML=`<table class="data-table"><thead><tr>
+      <th>Semester</th><th>Year</th><th>Label</th><th>Start</th><th>End</th><th>Working Days</th><th>By</th>${canEdit?'<th></th>':''}
+    </tr></thead><tbody>${data.map(c=>`<tr>
+      <td style="font-weight:700;color:var(--accent)">Sem ${c.semester}</td>
+      <td>${c.year}</td><td>${c.label||'-'}</td>
+      <td>${c.sem_start}</td><td>${c.sem_end}</td>
+      <td style="color:var(--blue);font-weight:600">${c.total_working_days} days</td>
+      <td style="color:var(--text-muted);font-size:11px">${c.created_by}</td>
+      ${canEdit?`<td><button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteCalendar(${c.id})">🗑</button></td>`:''}
+    </tr>`).join('')}</tbody></table>`;
+  }catch(e){console.error(e)}
+}
+
+async function saveCalendar(){
+  const sem=document.getElementById('calSem').value;
+  const year=document.getElementById('calYear').value;
+  const start=document.getElementById('calStart').value;
+  const end=document.getElementById('calEnd').value;
+  if(!start||!end){toast('Select start and end dates','error');return}
+  const wd=JSON.stringify([...document.querySelectorAll('.calWD:checked')].map(c=>c.value));
+  const r=await api('/planner/calendar',{method:'POST',body:JSON.stringify({
+    semester:parseInt(sem),year:parseInt(year),sem_start:start,sem_end:end,
+    label:document.getElementById('calLabel').value,working_days:wd
+  })});
+  if(r&&r.ok){const d=await r.json();toast(d.message);loadCalendar()}
+  else{const d=await r?.json();toast(d?.detail||'Failed','error')}
+}
+
+async function deleteCalendar(id){
+  if(!confirm('Delete this calendar?'))return;
+  const r=await api(`/planner/calendar/${id}`,{method:'DELETE'});
+  if(r&&r.ok){toast('Deleted');loadCalendar()}
+  else{toast('Failed','error')}
+}
+
+// ── Syllabus ──
+async function loadSyllabus(){
+  try{
+    const r=await api('/planner/syllabus');
+    if(!r||!r.ok)return;
+    const data=await r.json();
+    const el=document.getElementById('sylList');
+    const canEdit=ROLE==='faculty'||ROLE==='hod'||ROLE==='admin';
+    if(!data.length){el.innerHTML='<p style="color:var(--text-muted);font-size:13px">No syllabi uploaded yet</p>';return}
+    el.innerHTML=`<table class="data-table"><thead><tr>
+      <th>Subject</th><th>Semester</th><th>Units</th><th>Hours</th><th>Uploaded By</th><th></th>
+    </tr></thead><tbody>${data.map(s=>{
+      const units=s.topics?.units?.length||0;
+      return`<tr style="cursor:pointer" onclick="viewSyllabus(${s.id})">
+        <td style="font-weight:700;color:var(--accent)">${s.subject}</td>
+        <td>Sem ${s.semester}</td><td>${units} units</td>
+        <td>${s.total_hours||'-'} hrs</td>
+        <td style="font-size:11px;color:var(--text-muted)">${s.uploaded_by}</td>
+        <td>${canEdit?`<button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="event.stopPropagation();deleteSyllabus(${s.id})">🗑</button>`:''}</td>
+      </tr>`}).join('')}</tbody></table>`;
+  }catch(e){console.error(e)}
+}
+
+async function uploadSyllabus(){
+  const subj=document.getElementById('sylSubj').value.trim();
+  const sem=document.getElementById('sylSem').value;
+  const file=document.getElementById('sylFile').files[0];
+  if(!subj){toast('Enter subject name','error');return}
+  if(!file){toast('Select a file','error');return}
+  const btn=document.getElementById('sylUploadBtn');
+  const status=document.getElementById('sylUploadStatus');
+  btn.disabled=true;btn.textContent='⏳ Extracting with AI...';
+  status.textContent='This may take 10-30 seconds...';
+  const fd=new FormData();fd.append('subject',subj);fd.append('semester',sem);fd.append('file',file);
+  try{
+    const r=await fetch(API+'/planner/syllabus/upload',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN},body:fd});
+    const d=await r.json();
+    if(r.ok){toast(d.message);loadSyllabus();if(d.topics)viewSyllabusData(d.topics,subj)}
+    else{toast(d.detail||'Failed','error')}
+  }catch(e){toast('Error: '+e.message,'error')}
+  finally{btn.disabled=false;btn.textContent='🤖 Upload & Extract with AI';status.textContent=''}
+}
+
+async function viewSyllabus(id){
+  try{
+    const r=await api(`/planner/syllabus/${id}`);
+    if(!r||!r.ok)return;
+    const s=await r.json();
+    viewSyllabusData(s.topics,s.subject);
+  }catch(e){}
+}
+
+function viewSyllabusData(topics,subject){
+  const card=document.getElementById('sylDetailCard');
+  const el=document.getElementById('sylDetail');
+  card.style.display='block';
+  if(!topics||!topics.units||!topics.units.length){
+    el.innerHTML=`<p style="color:var(--text-muted)">No structured topics found</p>
+      <pre style="background:var(--bg-deep);padding:12px;border-radius:8px;font-size:12px;color:var(--text-secondary);overflow:auto;max-height:400px">${JSON.stringify(topics,null,2)}</pre>`;
+    return;
+  }
+  let h=`<h4 style="margin-bottom:12px;color:var(--accent)">${subject} — ${topics.units.length} Units, ${topics.total_hours||'?'} Hours</h4>`;
+  topics.units.forEach(u=>{
+    h+=`<div style="background:var(--bg-deep);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px">
+      <div style="font-weight:700;color:var(--blue);margin-bottom:6px">Unit ${u.unit_number}: ${u.title} <span style="font-weight:400;color:var(--text-muted);font-size:12px">(${u.hours||'?'} hrs)</span></div>
+      <ul style="margin:0;padding-left:18px">${(u.topics||[]).map(t=>`<li style="color:var(--text-secondary);font-size:13px;margin:3px 0">${t}</li>`).join('')}</ul>
+    </div>`;
+  });
+  el.innerHTML=h;
+}
+
+async function deleteSyllabus(id){
+  if(!confirm('Delete this syllabus?'))return;
+  const r=await api(`/planner/syllabus/${id}`,{method:'DELETE'});
+  if(r&&r.ok){toast('Deleted');loadSyllabus();document.getElementById('sylDetailCard').style.display='none'}
+  else{toast('Failed','error')}
+}
+
+// ── Lesson Plan ──
+let currentPlanId=null;
+
+async function loadLessonPlans(){
+  // Load syllabi for subject dropdown
+  try{
+    const sr=await api('/planner/syllabus');
+    if(sr&&sr.ok){
+      const syls=await sr.json();
+      const sel=document.getElementById('lpSubj');
+      if(sel){sel.innerHTML='<option value="">Select subject...</option>'+
+        syls.map(s=>`<option value="${s.subject}" data-sem="${s.semester}">${s.subject} (Sem ${s.semester})</option>`).join('')}
+    }
+  }catch(e){}
+  // Load calendars for dropdown
+  try{
+    const cr=await api('/planner/calendar');
+    if(cr&&cr.ok){
+      const cals=await cr.json();
+      const sel=document.getElementById('lpCal');
+      if(sel){sel.innerHTML='<option value="">Select calendar...</option>'+
+        cals.map(c=>`<option value="${c.id}">Sem ${c.semester} ${c.year} (${c.total_working_days} days)</option>`).join('')}
+    }
+  }catch(e){}
+  // Load active plans
+  try{
+    const r=await api('/planner/lesson-plan');
+    if(!r||!r.ok)return;
+    const plans=await r.json();
+    const el=document.getElementById('lpList');
+    const canEdit=ROLE==='faculty'||ROLE==='hod'||ROLE==='admin';
+    if(!plans.length){el.innerHTML='<p style="color:var(--text-muted);font-size:13px">No lesson plans yet. Generate one above!</p>';return}
+    el.innerHTML=`<table class="data-table"><thead><tr>
+      <th>Subject</th><th>Semester</th><th>Classes</th><th>Adjustments</th><th>Generated By</th><th></th>
+    </tr></thead><tbody>${plans.map(p=>`<tr style="cursor:pointer" onclick="viewPlan(${p.id})">
+      <td style="font-weight:700;color:var(--accent)">${p.subject}</td>
+      <td>Sem ${p.semester}</td><td>${p.total_classes}</td>
+      <td>${p.adjustments_count||0}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${p.generated_by}</td>
+      <td>
+        <button class="btn btn-primary" style="padding:3px 8px;font-size:11px" onclick="event.stopPropagation();viewPlan(${p.id})">📋 View</button>
+        ${canEdit?`<button class="btn btn-danger" style="padding:3px 8px;font-size:11px;margin-left:4px" onclick="event.stopPropagation();deletePlan(${p.id})">🗑</button>`:''}
+      </td>
+    </tr>`).join('')}</tbody></table>`;
+  }catch(e){console.error(e)}
+}
+
+async function generateLessonPlan(){
+  const subj=document.getElementById('lpSubj').value;
+  const sem=document.getElementById('lpSem').value;
+  const cal=document.getElementById('lpCal').value;
+  if(!subj){toast('Select a subject','error');return}
+  if(!cal){toast('Select a calendar','error');return}
+  // Auto-fill semester from syllabus option
+  const opt=document.getElementById('lpSubj').selectedOptions[0];
+  const actualSem=opt?.dataset?.sem||sem;
+  const btn=document.getElementById('lpGenBtn');
+  const status=document.getElementById('lpGenStatus');
+  btn.disabled=true;btn.textContent='⏳ AI generating plan...';
+  status.textContent='This takes 20-60 seconds. Please wait...';
+  const fd=new FormData();fd.append('subject',subj);fd.append('semester',actualSem);fd.append('calendar_id',cal);
+  try{
+    const r=await fetch(API+'/planner/lesson-plan/generate',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN},body:fd});
+    const d=await r.json();
+    if(r.ok){toast(d.message);loadLessonPlans();viewPlan(d.plan_id)}
+    else{toast(d.detail||'Generation failed','error')}
+  }catch(e){toast('Error: '+e.message,'error')}
+  finally{btn.disabled=false;btn.textContent='🤖 Generate Lesson Plan with AI';status.textContent=''}
+}
+
+async function viewPlan(planId){
+  currentPlanId=planId;
+  const card=document.getElementById('lpDetailCard');card.style.display='block';
+  const canEdit=ROLE==='faculty'||ROLE==='hod'||ROLE==='admin';
+  // Load progress
+  try{
+    const pr=await api(`/planner/lesson-plan/${planId}/progress`);
+    if(pr&&pr.ok){
+      const p=await pr.json();
+      document.getElementById('lpDetailTitle').textContent=`📝 ${p.subject} — Lesson Plan`;
+      const pct=p.progress_pct;
+      const color=pct>=80?'var(--accent)':pct>=50?'var(--yellow)':'var(--red)';
+      document.getElementById('lpProgressBar').innerHTML=`
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:200px;height:10px;background:var(--border);border-radius:5px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:${color};border-radius:5px;transition:width .5s"></div>
+          </div>
+          <span style="font-size:13px;font-weight:700;color:${color}">${pct}%</span>
+          <span style="font-size:11px;color:var(--text-muted)">${p.completed}/${p.total} done · ${p.missed} missed</span>
+          ${p.needs_adjustment?'<span style="color:var(--red);font-size:11px;font-weight:600">⚠️ Behind schedule</span>':''}
+        </div>`;
+      // Action buttons
+      document.getElementById('lpActions').innerHTML=canEdit?`
+        <button class="btn btn-warning" onclick="autoSyncPlan(${planId})">🔄 Sync from Attendance</button>
+        <button class="btn btn-primary" onclick="adjustPlan(${planId})">🤖 AI Auto-Adjust</button>
+      `:'';
+    }
+  }catch(e){}
+  // Load days
+  try{
+    const dr=await api(`/planner/lesson-plan/${planId}/days`);
+    if(!dr||!dr.ok)return;
+    const days=await dr.json();
+    const el=document.getElementById('lpDays');
+    const statusColors={completed:'var(--accent)',missed:'var(--red)',planned:'var(--blue)',rescheduled:'var(--yellow)'};
+    const statusIcons={completed:'✅',missed:'❌',planned:'📅',rescheduled:'🔄'};
+    let currentUnit='';
+    let h='';
+    days.forEach(d=>{
+      if(d.unit!==currentUnit){
+        currentUnit=d.unit;
+        h+=`<div style="margin:16px 0 8px;font-weight:700;color:var(--purple);font-size:14px;border-bottom:1px solid var(--border);padding-bottom:4px">${d.unit}</div>`;
+      }
+      const sc=statusColors[d.status]||'var(--text-muted)';
+      const si=statusIcons[d.status]||'📅';
+      const dayName=new Date(d.day+'T00:00:00').toLocaleDateString('en-US',{weekday:'short'});
+      h+=`<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:4px;background:var(--bg-deep)">
+        <div style="min-width:32px;text-align:center;font-size:13px">${si}</div>
+        <div style="min-width:90px;font-size:12px;color:var(--text-muted)">${d.day}<br><span style="font-size:10px">${dayName}</span></div>
+        <div style="min-width:28px;font-weight:700;color:var(--text-muted);font-size:12px">#${d.day_number}</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:13px;color:var(--text-primary)">${d.topic}</div>
+          ${d.subtopics?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${d.subtopics}</div>`:''}
+        </div>
+        <div style="min-width:80px;font-size:11px;color:var(--text-muted)">${d.teaching_method||''}</div>
+        <div style="min-width:80px;font-size:11px;font-weight:600;color:${sc}">${d.status.toUpperCase()}</div>
+        ${canEdit&&d.status==='planned'?`
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-success" style="padding:2px 6px;font-size:10px" onclick="markDay(${d.id},'completed')">✅</button>
+          <button class="btn btn-danger" style="padding:2px 6px;font-size:10px" onclick="markDay(${d.id},'missed')">❌</button>
+        </div>`:''}
+      </div>`;
+    });
+    el.innerHTML=h||'<p style="color:var(--text-muted)">No days in plan</p>';
+  }catch(e){console.error(e)}
+}
+
+async function markDay(dayId,status){
+  const fd=new FormData();fd.append('status',status);fd.append('actual_topic','');fd.append('remark','');
+  const r=await fetch(API+`/planner/lesson-plan/day/${dayId}/status`,{method:'PUT',headers:{'Authorization':'Bearer '+TOKEN},body:fd});
+  if(r.ok){toast(`Marked as ${status}`);if(currentPlanId)viewPlan(currentPlanId)}
+  else{toast('Failed','error')}
+}
+
+async function autoSyncPlan(planId){
+  toast('Syncing from attendance records...');
+  const r=await api(`/planner/lesson-plan/${planId}/auto-sync`,{method:'POST'});
+  if(r&&r.ok){const d=await r.json();toast(d.message);viewPlan(planId)}
+  else{const d=await r?.json();toast(d?.detail||'Failed','error')}
+}
+
+async function adjustPlan(planId){
+  if(!confirm('AI will reschedule remaining classes to cover missed topics. Continue?'))return;
+  toast('AI is adjusting the plan... please wait 20-60 seconds');
+  const r=await api(`/planner/lesson-plan/${planId}/adjust`,{method:'POST'});
+  if(r&&r.ok){const d=await r.json();toast(d.message);viewPlan(planId)}
+  else{const d=await r?.json();toast(d?.detail||'Adjustment failed','error')}
+}
+
+async function deletePlan(id){
+  if(!confirm('Delete this lesson plan?'))return;
+  const r=await api(`/planner/lesson-plan/${id}`,{method:'DELETE'});
+  if(r&&r.ok){toast('Deleted');loadLessonPlans();document.getElementById('lpDetailCard').style.display='none'}
+  else{toast('Failed','error')}
+}
+</script>
+</body>
+</html>
