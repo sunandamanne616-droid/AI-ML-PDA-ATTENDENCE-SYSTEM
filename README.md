@@ -1,7 +1,7 @@
 # AI-ML PDA Attendance System
 
 An AI-powered Face Recognition Attendance Management System developed using FastAPI, InsightFace, OpenCV, and SQLite. The platform automates student attendance using real-time facial recognition and provides intelligent dashboards for faculty and HOD management.
-
+https://youtu.be/HfhYhcG8UjE -----> DEMO VIDEO
 ---
 
 # Features
